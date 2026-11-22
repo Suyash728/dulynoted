@@ -30,9 +30,9 @@ All application code, tests, scripts, SQL and docs were written by Claude Code f
 ## What I verified by hand
 - Read and approved every plan before each slice was built (plan mode), and made every decision asked of me (Supabase project, Vault secret, Vercel access, test-data wipe, prompt logging, Gemini-first switch).
 - Set up the Telegram bot and demo group, all API keys and the Supabase Vault secret myself.
-- To confirm on the phone before submitting (tick when done):
-  - [ ] The class message (with Google Calendar links) and a scheduled reminder arrived in the "DulyNoted Demo" Telegram group.
-  - [ ] Tapping **Add to Google Calendar** in the message opened Google Calendar with the deadline prefilled.
+- Confirmed on my phone (Telegram demo group):
+  - [x] The class message (with Google Calendar links) and a scheduled reminder arrived in the "DulyNoted Demo" Telegram group.
+  - [x] Tapping **Add to Google Calendar** in the message opened Google Calendar with the deadline prefilled.
 
 ## What was verified automatically (results read during the build)
 - Telegram Bot API returned `ok: true` for `sendMessage` and `sendDocument` on a real delivery; pg_cron fired the demo reminder on its own (SCHEDULE step in the run log, `docs/s3-reminder.png`).
@@ -538,4 +538,9 @@ Fix nothing big. For any FAIL, give me a one-line workaround for the demo. Stop.
 ### 23. Approval from history [14:36 IST]
 ```
 [screenshot: history row "Sample photo: Scholarship · Awaiting approval"] and how will the user approve this? if there isn't any mechanism than add it
+```
+
+### 24. Manual verification confirmed [14:40 IST]
+```
+tick both boxes in AI_DISCLOSURE, i've verified them
 ```
