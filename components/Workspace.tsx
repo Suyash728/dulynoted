@@ -24,9 +24,11 @@ interface Props {
   maxChars: number;
   /** Re-open a past run (from /history). */
   initialRunId?: string;
+  /** Scroll to and focus the approval panel once the run is loaded ("Review & approve"). */
+  focusApproval?: boolean;
 }
 
-export function Workspace({ samples, maxChars, initialRunId }: Props) {
+export function Workspace({ samples, maxChars, initialRunId, focusApproval = false }: Props) {
   const [mode, setMode] = useState<InputMode>('paste');
   const [text, setText] = useState('');
   const [file, setFile] = useState<File | null>(null);
@@ -40,6 +42,15 @@ export function Workspace({ samples, maxChars, initialRunId }: Props) {
   useEffect(() => {
     if (initialRunId) void load(initialRunId);
   }, [initialRunId, load]);
+
+  // From History's "Review & approve": bring the approval panel into view once the run has loaded.
+  const loadedId = state.run?.id;
+  useEffect(() => {
+    if (!focusApproval || !loadedId || loadedId !== initialRunId) return;
+    const bar = document.getElementById('approval');
+    bar?.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
+    document.getElementById('approve-button')?.focus({ preventScroll: true });
+  }, [focusApproval, loadedId, initialRunId]);
 
   const pickScenario = async (s: Scenario) => {
     setScenario(s);

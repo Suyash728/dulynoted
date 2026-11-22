@@ -15,6 +15,7 @@ export interface DashboardData {
   stats: DashboardStats | null;
   runs: RunSummary[];
   status: SystemStatus;
+  pendingApprovals: number;
 }
 
 export async function loadDashboard(limit = 500): Promise<DashboardData> {
@@ -28,6 +29,7 @@ export async function loadDashboard(limit = 500): Promise<DashboardData> {
   }
   return {
     runs,
+    pendingApprovals: runs.filter((r) => r.status === 'awaiting_approval').length,
     stats: database ? summarizeRuns(runs) : null,
     status: {
       database,

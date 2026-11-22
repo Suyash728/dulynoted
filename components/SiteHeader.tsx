@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { BellRing } from 'lucide-react';
+import { BellRing, Clock } from 'lucide-react';
 import type { SystemStatus } from '@/lib/dashboard';
 import { cn } from '@/lib/utils';
 import { HowItWorks } from './HowItWorks';
@@ -11,6 +11,8 @@ interface Props {
   current: 'home' | 'history';
   title: string;
   subtitle: string;
+  /** Runs waiting for a staff click; shows a shortcut to them. */
+  pendingApprovals?: number;
   /** Rendered inside the hero band (KPI tiles). */
   children?: ReactNode;
 }
@@ -21,7 +23,7 @@ const NAV = [
 ] as const;
 
 /** Dark hero band: brand, navigation, live status and the page's headline numbers. */
-export function SiteHeader({ status, current, title, subtitle, children }: Props) {
+export function SiteHeader({ status, current, title, subtitle, pendingApprovals = 0, children }: Props) {
   return (
     <header className="relative bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white">
       {/* Decorative glow, clipped in its own layer so popovers in the header are never cut off. */}
@@ -60,7 +62,18 @@ export function SiteHeader({ status, current, title, subtitle, children }: Props
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">{title}</h1>
             <p className="mt-1 text-sm text-indigo-100">{subtitle}</p>
           </div>
-          <StatusChips status={status} />
+          <div className="flex flex-col items-end gap-2">
+            {pendingApprovals > 0 && (
+              <Link
+                href="/history?filter=awaiting"
+                className="inline-flex items-center gap-2 rounded-full bg-amber-300 px-3 py-1 text-xs font-semibold text-amber-950 shadow-sm hover:bg-amber-200"
+              >
+                <Clock aria-hidden className="h-3.5 w-3.5" />
+                {pendingApprovals} circular{pendingApprovals === 1 ? '' : 's'} awaiting approval →
+              </Link>
+            )}
+            <StatusChips status={status} />
+          </div>
         </div>
 
         {children && <div className="mt-5">{children}</div>}

@@ -534,3 +534,8 @@ Fix nothing big. For any FAIL, give me a one-line workaround for the demo. Stop.
 ```
 [screenshot: How it works panel overlapped by status chips and KPI tiles] fix "HOw it works" message diaglog in the UT
 ```
+
+### 23. Approval from history [14:36 IST]
+```
+[screenshot: history row "Sample photo: Scholarship · Awaiting approval"] and how will the user approve this? if there isn't any mechanism than add it
+```

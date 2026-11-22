@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { AlarmClock, AlertTriangle, CalendarPlus, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { AlarmClock, AlertTriangle, CalendarPlus, CheckCircle2, Clock, Loader2, Send } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import type { ApiEnvelope, RunResult } from '@/lib/types';
@@ -66,7 +66,7 @@ export function ApprovalBar({ run, approving, onApprove, onRefresh }: Props) {
   };
 
   return (
-    <div className="space-y-2 border-t pt-3">
+    <div id="approval" className="scroll-mt-24 space-y-2 border-t pt-4">
       {delivered && deliver && (
         <p role="status" className="flex items-start gap-2 rounded-lg border border-emerald-300 bg-emerald-50 p-2.5 text-sm text-emerald-900">
           <CheckCircle2 aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
@@ -82,8 +82,17 @@ export function ApprovalBar({ run, approving, onApprove, onRefresh }: Props) {
         </p>
       )}
 
+      {run.status === 'awaiting_approval' && !approving && deliver?.status !== 'warn' && (
+        <div className="flex items-start gap-2.5 rounded-xl border border-amber-300 bg-amber-50 p-3 text-sm text-amber-950">
+          <Clock aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
+          <div>
+            <p className="font-semibold">Awaiting your approval</p>
+            <p className="text-xs">Check the deadlines, classes and message above. Nothing reaches students until you approve.</p>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button type="button" onClick={onApprove} disabled={!canApprove} className="btn-gradient h-11 flex-1 rounded-xl font-semibold shadow-md" aria-describedby="approve-note">
+        <Button id="approve-button" type="button" onClick={onApprove} disabled={!canApprove} className="btn-gradient h-11 flex-1 rounded-xl font-semibold shadow-md" aria-describedby="approve-note">
           {approving ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <Send aria-hidden className="h-4 w-4" />}
           {approving ? 'Sending…' : delivered ? `Sent to ${classes} classes` : `Approve & send to ${classes} classes`}
         </Button>
