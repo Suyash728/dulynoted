@@ -246,3 +246,8 @@ Scope is FROZEN. Only fixes, states and polish. Read CLAUDE.md first.
 
 DONE ONLY WHEN: all 9 demo screenshots exist, force-fail test passes, `npm run build` passes, redeployed. Commit "chore: polish, demo test, demo script" and stop.
 ```
+
+### 16. Vercel access approved [13:59 IST]
+```
+i've approved
+```
