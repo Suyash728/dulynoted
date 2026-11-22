@@ -86,8 +86,12 @@ check "demo reminder refused for a dry-run delivery (409)" "$(echo "$R1" | envel
 CR=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST "$BASE/api/cron/dispatch")
 check "cron dispatch without bearer is 401" "$([ "$CR" = 401 ] && echo true || echo false)" "HTTP $CR"
 
-DIR="$(cd "$(dirname "$0")/.." && pwd)"
-P=$(curl -sN --max-time 60 -X POST "$BASE/api/runs" -F inputType=pdf -F sampleId=exam-form -F "file=@$DIR/public/samples/exam-form.pdf;type=application/pdf")
+TMPPDF=$(mktemp --suffix=.pdf); trap 'rm -f "$TMPPDF"' EXIT
+curl -s --max-time 30 -o "$TMPPDF" "$BASE/api/samples/exam-form.pdf"
+check "sample PDF is generated for today (starts with %PDF)" "$(head -c 4 "$TMPPDF" | grep -q '%PDF' && echo true || echo false)"
+IMG=$(curl -s -o /dev/null -w '%{http_code} %{content_type}' --max-time 30 "$BASE/api/samples/scholarship.png")
+check "sample photo is generated (image/png)" "$([ "$IMG" = '200 image/png' ] && echo true || echo false)" "$IMG"
+P=$(curl -sN --max-time 60 -X POST "$BASE/api/runs" -F inputType=pdf -F sampleId=exam-form -F "file=@$TMPPDF;type=application/pdf")
 check "upload PDF reaches awaiting_approval" "$(echo "$P" | judge 'R && R.status === "awaiting_approval" && R.inputType === "pdf"')"
 
 F=$(printf 'not a pdf' | curl -s --max-time 20 -X POST "$BASE/api/runs" -F inputType=pdf -F "file=@-;filename=fake.pdf;type=application/pdf")

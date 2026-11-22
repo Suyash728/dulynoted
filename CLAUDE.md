@@ -46,7 +46,7 @@ app/api/runs/[id]/ics/route.ts — GET text/calendar
 app/api/cron/dispatch/route.ts — (S3) sends due reminders; requires Authorization: Bearer CRON_SECRET
 app/history/page.tsx — (S3)
 lib/llm.ts · lib/pipeline/{ingest,extract,normalize,route,clash,compose,deliver,schedule,run}.ts · lib/telegram.ts · lib/ics.ts · lib/db.ts · lib/samples.ts · lib/types.ts
-seed/circulars/*.txt (date tokens {{D+n}}) · seed/fixtures/*.json · public/samples/* · supabase/*.sql · scripts/smoke.sh
+seed/circulars/*.txt (date tokens {{D+n}}) · seed/fixtures/*.json · app/api/samples/* (PDF/photo rendered per request) · supabase/*.sql · scripts/smoke.sh
 
 ## Pipeline (detail in agents/graph.md)
 INGEST → EXTRACT (→ REPAIR) → NORMALIZE_DATES → ROUTE_AUDIENCE → CLASH_CHECK → COMPOSE → [APPROVE gate] → DELIVER → SCHEDULE (S3). Plain function calls. No LangGraph / CrewAI / n8n.
@@ -74,4 +74,4 @@ WON'T: auth, Google OAuth / Calendar API writes (template links only), email, Wh
 - Next 14 Data Cache caches GET fetches: the Supabase client in lib/db.ts forces `cache: 'no-store'` — keep it
 - pg_cron job `dulynoted-dispatch` (every minute) reads its bearer from Vault secret `dulynoted_cron_secret`
 - Before the demo / at P7 (user-approved): wipe test data — `delete from reminders; delete from deliveries; delete from run_steps; delete from runs;` (keep audiences + calendar_events), then do 2–3 clean real runs so KPI tiles are genuine
-- Demo uploads in public/samples are rendered for a fixed day: re-run `npm run demo-files` (and reseed calendar) on demo day
+- Demo is date-proof: sample text, PDF (/api/samples/exam-form.pdf) and photo (/api/samples/scholarship.png) render relative to today; pg_cron job `dulynoted-demo-timetable` (supabase/demo_refresh.sql) keeps the seeded timetable at D+2 / D+6 every 15 min

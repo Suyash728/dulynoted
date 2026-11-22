@@ -544,3 +544,8 @@ Fix nothing big. For any FAIL, give me a one-line workaround for the demo. Stop.
 ```
 tick both boxes in AI_DISCLOSURE, i've verified them
 ```
+
+### 25. Demo-ready live link [14:41 IST]
+```
+there's no demo... the judges will project from the live link... make sure it's in demo ready state
+```

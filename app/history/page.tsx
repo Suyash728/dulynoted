@@ -114,7 +114,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: { fi
             })}
           </ul>
         </nav>
-        <div className="surface overflow-x-auto">
+        <div className="surface relative overflow-x-auto">
           <table className="w-full min-w-[860px] text-sm">
             <caption className="sr-only">Latest runs ({active.label}), newest first. Open a run to see its full log.</caption>
             <thead className="border-b bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">

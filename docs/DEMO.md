@@ -3,7 +3,7 @@
 Live: https://dulynoted.vercel.app · Phone: Telegram group **DulyNoted Demo**, screen-mirrored.
 
 ## Before going on stage (5 min)
-1. Demo on a different day than the seed? Run `npm run demo-files` (re-dates the sample PDF/photo) and re-run `supabase/seed.sql` for `calendar_events` (Unit Test 2 must be at D+2 10:00 for the clash).
+1. Nothing to re-date: sample texts, the PDF and the photo are generated with today's dates, and a pg_cron job keeps Unit Test 2 at D+2 10:00 IST, so the clash shows on any day.
 2. Open https://dulynoted.vercel.app once (warms the functions). Open the Telegram group on the phone.
 3. Backup: screen recording of this exact path on the laptop + phone. If the Wi-Fi dies, play it.
 4. If Gemini is rate-limited, the run log shows **Groq (fallback)** and names the reason; if both are down, samples still run from **Cache**. Say so; it's a feature.

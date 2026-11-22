@@ -26,7 +26,7 @@ const nextConfig = {
   poweredByHeader: false,
   experimental: {
     // seed files are read at runtime by the pipeline routes
-    outputFileTracingIncludes: { '/api/runs': ['./seed/**/*'], '/api/runs/[id]/**': ['./seed/**/*'] },
+    outputFileTracingIncludes: { '/api/runs': ['./seed/**/*'], '/api/runs/[id]/**': ['./seed/**/*'], '/api/samples/**': ['./seed/**/*'], '/': ['./seed/**/*'] },
     serverComponentsExternalPackages: ['unpdf'],
   },
   async headers() {

@@ -10,7 +10,6 @@
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.mjs",
     "fixtures": "tsx scripts/make-fixtures.ts",
-    "demo-files": "tsx scripts/make-demo-files.ts",
     "demo:path": "node scripts/demo-path.mjs"
   },
   "dependencies": {
@@ -28,6 +27,7 @@
     "next": "14.2.35",
     "next-themes": "^0.4.6",
     "openai": "^7.62.0",
+    "pdf-lib": "^1.17.1",
     "react": "^18",
     "react-dom": "^18",
     "server-only": "^0.0.1",

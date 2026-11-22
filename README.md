@@ -74,6 +74,7 @@ Four of the eight steps are plain deterministic code, and the human approval gat
 ## Fallbacks (the demo never dies)
 - **Gemini rate-limited or down** → Groq `gpt-oss` takes over; the Extract row says why ("fallback after gemini: HTTP 429").
 - **Every LLM down** → the five demo scenarios run from cached fixtures (tier **Cache**); `FORCE_LLM_FAIL=1` proves it (tested on a Vercel preview — [`docs/demo/forcefail-cache.png`](docs/demo/forcefail-cache.png)).
+- **Any day, any time** → demo samples (text, PDF, photo) are generated with today's dates and a pg_cron job keeps the timetable relative, so the clash demo never goes stale.
 - **COMPOSE fails** → a template message built only from extracted fields.
 - **Telegram down** → the Deliver step turns amber, the run stays approvable, and the **Add to Google Calendar** buttons (plus the Apple / Outlook `.ics`) still work.
 
@@ -107,14 +108,13 @@ cp .env.example .env.local   # then fill in the values
 Environment variable **names** (values never committed):
 `GEMINI_API_KEY` · `GROQ_API_KEY` · `NEXT_PUBLIC_SUPABASE_URL` · `SUPABASE_SERVICE_ROLE_KEY` · `TELEGRAM_BOT_TOKEN` · `TELEGRAM_DEMO_CHAT_ID` · `CRON_SECRET` · `FORCE_LLM_FAIL` · `APP_TZ=Asia/Kolkata`
 
-Database: run [`supabase/schema.sql`](supabase/schema.sql) then [`supabase/seed.sql`](supabase/seed.sql) in a Supabase project. Optional reminders: enable `pg_cron` + `pg_net` and schedule a POST to `/api/cron/dispatch` with `Authorization: Bearer <CRON_SECRET>` (the secret is read from Supabase Vault).
+Database: run [`supabase/schema.sql`](supabase/schema.sql), [`supabase/seed.sql`](supabase/seed.sql), then [`supabase/demo_refresh.sql`](supabase/demo_refresh.sql) (keeps the demo timetable relative to today) in a Supabase project. Optional reminders: enable `pg_cron` + `pg_net` and schedule a POST to `/api/cron/dispatch` with `Authorization: Bearer <CRON_SECRET>` (the secret is read from Supabase Vault).
 
 ```bash
 npm run dev                          # http://localhost:3000
 npm test                             # 88 unit tests
 bash scripts/smoke.sh http://localhost:3000
 CHROMIUM_PATH=/usr/bin/chromium node scripts/e2e.mjs   # browser path + axe a11y
-npm run demo-files                   # re-date the sample PDF/photo for today
 ```
 
 ## Stack

@@ -42,7 +42,7 @@ const violations = [...axe.violations, ...axe2.violations];
 // Upload path: the phone-photo sample goes through Gemini OCR and reaches the approval gate.
 t0 = Date.now();
 await page.getByRole('button', { name: /Scholarship · phone photo/ }).click();
-await page.getByText(/Selected: scholarship\.jpg/).waitFor();
+await page.getByText(/Selected: scholarship\.png/).waitFor();
 await page.getByRole('button', { name: 'Run automation' }).click();
 await page.getByRole('button', { name: /Approve & send to \d+ classes/ }).waitFor({ timeout: 60_000 });
 console.log(`photo upload → awaiting approval after ${Date.now() - t0} ms`);
