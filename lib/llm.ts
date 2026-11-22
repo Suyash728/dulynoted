@@ -7,7 +7,7 @@ import { validateJson } from './llm-json';
 
 /**
  * The ONLY place that talks to model providers.
- * Text:  groq → gemini → cache.   Image: gemini → cache.
+ * Text:  Gemini (structured output) → Groq (fallback) → cache.   Image: Gemini → cache.
  * Each tier gets one call plus at most ONE repair call when the JSON fails zod.
  */
 
@@ -19,6 +19,14 @@ export interface ChatResult<T> {
   tier: Tier;
   model: string;
   ms: number;
+  /** Why earlier tiers were skipped, e.g. ["gemini: HTTP 429"] — shown in the run log. */
+  fallbacks: string[];
+}
+
+/** A JSON Schema for providers that support schema-constrained output (Gemini). */
+export interface JsonSchemaSpec {
+  name: string;
+  schema: Record<string, unknown>;
 }
 
 export interface RepairInfo {
@@ -33,6 +41,8 @@ export interface ChatOptions<T> {
   task: LlmTask;
   messages: Message[];
   schema: z.ZodType<T, unknown>;
+  /** Gemini gets schema-constrained output; Groq uses json_object (its json_schema support is unreliable). */
+  jsonSchema?: JsonSchemaSpec;
   /** Last-resort offline answer (e.g. a fixture for a known sample). */
   cache?: () => Promise<T | null>;
   onRepair?: (info: RepairInfo) => void;
@@ -42,7 +52,8 @@ export interface ChatOptions<T> {
 export interface LiveTier {
   tier: Exclude<Tier, 'cache' | 'none'>;
   model: string;
-  complete: (messages: Message[], signal: AbortSignal) => Promise<string>;
+  timeoutMs?: number;
+  complete: (messages: Message[], signal: AbortSignal, jsonSchema?: JsonSchemaSpec) => Promise<string>;
 }
 
 export class LlmUnavailableError extends Error {
@@ -52,7 +63,11 @@ export class LlmUnavailableError extends Error {
   }
 }
 
-const TIMEOUT_MS: Record<LlmTask, number> = { extract: 8_000, compose: 3_000, ocr: 15_000 };
+const TIMEOUT_MS: Record<LiveTier['tier'], Record<LlmTask, number>> = {
+  gemini: { extract: 8_000, compose: 5_000, ocr: 12_000 },
+  groq: { extract: 8_000, compose: 3_000, ocr: 8_000 },
+};
+const DEFAULT_TIMEOUT_MS = 8_000;
 const MAX_TOKENS: Record<LlmTask, number> = { extract: 2_000, compose: 400, ocr: 2_500 };
 
 const GROQ_BASE = 'https://api.groq.com/openai/v1';
@@ -72,12 +87,16 @@ function openAiTier(
   return {
     tier,
     model,
-    async complete(messages, signal) {
+    timeoutMs: TIMEOUT_MS[tier][task],
+    async complete(messages, signal, jsonSchema) {
       const res = await client.chat.completions.create(
         {
           model,
           messages,
-          response_format: { type: 'json_object' },
+          response_format:
+            tier === 'gemini' && jsonSchema
+              ? { type: 'json_schema', json_schema: { name: jsonSchema.name, schema: jsonSchema.schema } }
+              : { type: 'json_object' },
           max_completion_tokens: MAX_TOKENS[task],
           temperature: 0.1,
           ...(tier === 'groq' ? { reasoning_effort: 'low' as const } : {}),
@@ -89,18 +108,18 @@ function openAiTier(
   };
 }
 
-/** Live tiers for a task, skipping providers with no key or when FORCE_LLM_FAIL is set. Image input (ocr) is Gemini-only. */
+/** Live tiers in priority order: Gemini first, Groq as fallback (text only). Empty when FORCE_LLM_FAIL is set. */
 export function liveTiers(task: LlmTask): LiveTier[] {
   const e = env();
   if (e.FORCE_LLM_FAIL) return [];
   const tiers: LiveTier[] = [];
-  if (e.GROQ_API_KEY && task !== 'ocr') {
-    groq ??= new OpenAI({ apiKey: e.GROQ_API_KEY, baseURL: GROQ_BASE });
-    tiers.push(openAiTier(groq, 'groq', GROQ_MODEL[task], task));
-  }
   if (e.GEMINI_API_KEY) {
     gemini ??= new OpenAI({ apiKey: e.GEMINI_API_KEY, baseURL: GEMINI_BASE });
     tiers.push(openAiTier(gemini, 'gemini', GEMINI_MODEL, task));
+  }
+  if (e.GROQ_API_KEY && task !== 'ocr') {
+    groq ??= new OpenAI({ apiKey: e.GROQ_API_KEY, baseURL: GROQ_BASE });
+    tiers.push(openAiTier(groq, 'groq', GROQ_MODEL[task], task));
   }
   return tiers;
 }
@@ -118,9 +137,9 @@ export async function routeChat<T>(opts: ChatOptions<T>, tiers: LiveTier[]): Pro
     const started = Date.now();
     const elapsed = () => Date.now() - started;
     try {
-      const signal = AbortSignal.timeout(TIMEOUT_MS[opts.task]);
-      const first = validateJson(await t.complete(opts.messages, signal), opts.schema);
-      if (first.ok) return { data: first.data, tier: t.tier, model: t.model, ms: elapsed() };
+      const timeout = t.timeoutMs ?? DEFAULT_TIMEOUT_MS;
+      const first = validateJson(await t.complete(opts.messages, AbortSignal.timeout(timeout), opts.jsonSchema), opts.schema);
+      if (first.ok) return { data: first.data, tier: t.tier, model: t.model, ms: elapsed(), fallbacks: attempts };
 
       const repairStart = Date.now();
       const repairMessages: Message[] = [
@@ -131,11 +150,11 @@ export async function routeChat<T>(opts: ChatOptions<T>, tiers: LiveTier[]): Pro
         },
       ];
       const second = validateJson(
-        await t.complete(repairMessages, AbortSignal.timeout(TIMEOUT_MS[opts.task])),
+        await t.complete(repairMessages, AbortSignal.timeout(timeout), opts.jsonSchema),
         opts.schema,
       );
       opts.onRepair?.({ tier: t.tier, model: t.model, error: first.error, ok: second.ok, ms: Date.now() - repairStart });
-      if (second.ok) return { data: second.data, tier: t.tier, model: t.model, ms: elapsed() };
+      if (second.ok) return { data: second.data, tier: t.tier, model: t.model, ms: elapsed(), fallbacks: attempts };
       attempts.push(`${t.tier}: invalid JSON after repair`);
     } catch (err) {
       attempts.push(`${t.tier}: ${describe(err)}`);
@@ -144,7 +163,7 @@ export async function routeChat<T>(opts: ChatOptions<T>, tiers: LiveTier[]): Pro
 
   const started = Date.now();
   const cached = opts.cache ? await opts.cache() : null;
-  if (cached !== null) return { data: cached, tier: 'cache', model: 'fixture', ms: Date.now() - started };
+  if (cached !== null) return { data: cached, tier: 'cache', model: 'fixture', ms: Date.now() - started, fallbacks: attempts };
   throw new LlmUnavailableError(attempts);
 }
 

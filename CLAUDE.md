@@ -29,13 +29,13 @@ npm run dev · npm run build · npm run lint · npm test · bash scripts/smoke.s
 ## Stack
 Next.js 14 App Router + TS + Tailwind + shadcn/ui · Supabase Postgres (server-only, service-role key) · Vercel (export const maxDuration = 60 on pipeline routes) · npm: openai zod @supabase/supabase-js ics chrono-node unpdf
 
-## LLM router (lib/llm.ts) — one OpenAI client class, two base URLs
-- Tier 1 Groq https://api.groq.com/openai/v1 — openai/gpt-oss-120b (extract), openai/gpt-oss-20b (compose); reasoning_effort "low" (Groq only). Timeouts: extract 8 s, compose 3 s.
-- Tier 2 Gemini https://generativelanguage.googleapis.com/v1beta/openai/ — gemini-3.5-flash-lite (fallback for text; FIRST choice for image input). gemini-3.8-flash is NOT used (20 req/day).
+## LLM router (lib/llm.ts) — Gemini primary (Google for Developers–sponsored event), one OpenAI client class, two base URLs
+- Tier 1 Gemini https://generativelanguage.googleapis.com/v1beta/openai/ — gemini-3.5-flash-lite for extract, compose and image OCR. **Structured output**: response_format json_schema (lib/extraction-json-schema.ts). Timeouts: extract 8 s, compose 5 s, image 12 s. gemini-3.8-flash is NOT used (20 req/day).
+- Tier 2 Groq https://api.groq.com/openai/v1 — fallback for text only: openai/gpt-oss-120b (extract), openai/gpt-oss-20b (compose); json_object; reasoning_effort "low". Timeouts: extract 8 s, compose 3 s.
 - Tier 3 cache — seed/fixtures/<sampleId>.json, used when every live tier fails or FORCE_LLM_FAIL=1 and the input is a known sample. Run log labels it tier "cache".
-- Order: text → groq → gemini → cache. image → gemini → cache. On 429/timeout/5xx move to next tier.
-- JSON: response_format json_object, validate with zod; on failure ONE repair call that includes the zod error (emits a REPAIR step).
-- chat() returns { data, tier, model, ms }.
+- Order: text → gemini → groq → cache. image → gemini → cache. On 429/timeout/5xx move to next tier; the EXTRACT output names the failed tier ("fallback after gemini: HTTP 429").
+- zod validates every reply; on failure ONE repair call that includes the zod error (emits a REPAIR step).
+- chat() returns { data, tier, model, ms, fallbacks }. Tier badges: "Gemini 3.5 Flash-Lite" / "Groq (fallback)" / "Cache".
 
 ## Architecture map
 app/page.tsx — 3 panes: InputPanel | ResultPanel (ActionCard, ClashBanner, DigestPreview, TimeSaved) | RunLog
@@ -56,10 +56,10 @@ SCOPE FROZEN [13:48 IST] — from now on: fixes, polish and deploy only.
 MUST (by T+2:00):
 1. Hero pipeline on pasted text / sample buttons with a live step-by-step run log + time-saved number. [working output, AI use, UX]
 2. Clash detection against the seeded class calendar, shown as a banner and a yellow run-log step. [usefulness, novelty]
-3. Approve → Telegram digest + .ics (with alarms) delivered; cache fallback when LLMs fail. [end-to-end automation, demo]
+3. Approve → Telegram digest + .ics (with alarms) + one-tap "Add to Google Calendar" links (lib/gcal.ts) delivered; cache fallback when LLMs fail. [end-to-end automation, demo]
 SHOULD: PDF + image input; scheduled reminder via pg_cron with a "demo reminder in 60 s" button; history page.
 COULD: Marathi digest toggle.
-WON'T: auth, email, WhatsApp, n8n, multi-college, inline editing of extracted fields, mobile app, local GPU, LangGraph.
+WON'T: auth, Google OAuth / Calendar API writes (template links only), email, WhatsApp, n8n, multi-college, inline editing of extracted fields, mobile app, local GPU, LangGraph.
 
 ## Do not touch
 .env* · lib/types.ts · supabase/schema.sql · PROMPTS.md history (append only) · .claude/hooks

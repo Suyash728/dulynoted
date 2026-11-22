@@ -48,8 +48,8 @@ describe('stepKind / engineLabel', () => {
     expect(stepKind({ step: 'COMPOSE', tier: 'none' })).toBe('Code');
   });
   it('labels engines', () => {
-    expect(engineLabel({ step: 'EXTRACT', tier: 'groq', model: 'openai/gpt-oss-120b' })).toBe('Groq 120B');
-    expect(engineLabel({ step: 'COMPOSE', tier: 'groq', model: 'openai/gpt-oss-20b' })).toBe('Groq 20B');
+    expect(engineLabel({ step: 'EXTRACT', tier: 'gemini', model: 'gemini-3.5-flash-lite' })).toBe('Gemini 3.5 Flash-Lite');
+    expect(engineLabel({ step: 'COMPOSE', tier: 'groq', model: 'openai/gpt-oss-20b' })).toBe('Groq (fallback)');
     expect(engineLabel({ step: 'NORMALIZE_DATES' })).toBe('chrono-node');
     expect(engineLabel({ step: 'EXTRACT', tier: 'cache' })).toBe('Cache');
   });

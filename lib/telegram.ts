@@ -1,5 +1,6 @@
 import type { RunResult } from './types';
 import { formatTime } from './time';
+import { actionCalendarUrl, eventCalendarUrl } from './gcal';
 
 /**
  * Telegram delivery. Message building is pure (unit-tested); sending uses fetch with a timeout.
@@ -30,6 +31,15 @@ export function baseDigest(run: RunResult): string {
     .trim();
 }
 
+/** One Google Calendar template link per dated deadline and event. */
+export function calendarLinks(run: RunResult): { label: string; url: string }[] {
+  const x = run.extraction;
+  if (!x) return [];
+  const actions = x.actions.map((a) => ({ label: a.what, url: actionCalendarUrl(a, x.title) }));
+  const events = x.events.map((e) => ({ label: e.title, url: eventCalendarUrl(e, x.title) }));
+  return [...actions, ...events].filter((l): l is { label: string; url: string } => l.url !== null);
+}
+
 /** One message per Telegram chat; classes without their own chat go to the demo group. */
 export function buildChatMessages(run: RunResult, demoChatId: string | undefined): ChatMessage[] {
   const byChat = new Map<string, string[]>();
@@ -41,6 +51,10 @@ export function buildChatMessages(run: RunResult, demoChatId: string | undefined
 
   const title = run.extraction?.title ?? 'New circular';
   const body = escapeHtml(baseDigest(run));
+  const calendarLines = calendarLinks(run).map(({ label, url }) => `➕ <a href="${escapeHtml(url)}">Add to Google Calendar: ${escapeHtml(label)}</a>`);
+  // Credit Gemini only when Gemini really wrote this digest (COMPOSE step tier).
+  const byGemini = run.steps.some((s) => s.step === 'COMPOSE' && s.tier === 'gemini');
+  const footer = `Calendar file attached ⤵${byGemini ? ' · summarised by Gemini' : ''}`;
 
   return Array.from(byChat, ([chatId, labels]) => {
     const clashLines = run.clashes
@@ -52,8 +66,9 @@ export function buildChatMessages(run: RunResult, demoChatId: string | undefined
       '',
       body,
       ...(clashLines.length ? ['', ...clashLines] : []),
+      ...(calendarLines.length ? ['', ...calendarLines] : []),
       '',
-      'Calendar file attached ⤵',
+      footer,
     ].join('\n');
     return { chatId, labels, html };
   });

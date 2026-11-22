@@ -1,14 +1,14 @@
 import { Info } from 'lucide-react';
 
 const STEPS: [name: string, what: string, kind: 'AI' | 'Code' | 'Human'][] = [
-  ['Read', 'Text, PDF text layer, or OCR for photos and scans', 'Code'],
-  ['Extract', 'Actions, deadlines, events and audience as validated JSON', 'AI'],
+  ['Read', 'Text or PDF text layer; Gemini vision for photos and scans', 'Code'],
+  ['Extract', 'Gemini returns actions, deadlines and audience as schema-checked JSON', 'AI'],
   ['Resolve dates', '"tomorrow 5 pm" → exact IST time from the original wording', 'Code'],
   ['Find classes', 'Years, branches and divisions matched to the class list', 'Code'],
   ['Check timetable', 'Overlaps with each class’s existing exams and lectures', 'Code'],
-  ['Write message', 'One short class-group message (template if AI is down)', 'AI'],
+  ['Write message', 'Gemini writes one short class message (template if AI is down)', 'AI'],
   ['Approve', 'Nothing is sent until a staff member clicks once', 'Human'],
-  ['Deliver & remind', 'Telegram message + calendar file, reminders 24 h before', 'Code'],
+  ['Deliver & remind', 'Telegram + .ics + Google Calendar links; reminders 24 h before', 'Code'],
 ];
 
 const KIND_STYLE = {

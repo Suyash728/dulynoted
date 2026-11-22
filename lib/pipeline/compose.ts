@@ -45,6 +45,7 @@ export async function composeDigest(x: Extraction, cacheable: boolean, now: Date
     const res = await chat({
       task: 'compose',
       schema: digestSchema,
+      jsonSchema: { name: 'class_digest', schema: { type: 'object', properties: { digest: { type: 'string' } }, required: ['digest'] } },
       messages: [
         { role: 'system', content: SYSTEM },
         { role: 'user', content: facts(x, now) },

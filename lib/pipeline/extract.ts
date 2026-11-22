@@ -2,6 +2,7 @@ import 'server-only';
 import type { Extraction } from '../types';
 import { chat, type ChatResult, type RepairInfo } from '../llm';
 import { extractionSchema } from '../schemas';
+import { EXTRACTION_JSON_SCHEMA } from '../extraction-json-schema';
 
 /** EXTRACT — the one LLM call that turns a messy circular into structured data. */
 
@@ -34,6 +35,7 @@ export function extractCirculars(
   return chat({
     task: 'extract',
     schema: extractionSchema,
+    jsonSchema: { name: 'circular_extraction', schema: EXTRACTION_JSON_SCHEMA },
     messages: [
       { role: 'system', content: EXTRACT_SYSTEM_PROMPT },
       { role: 'user', content: `Circular:\n"""\n${text}\n"""` },

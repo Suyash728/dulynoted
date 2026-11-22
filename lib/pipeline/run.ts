@@ -85,7 +85,8 @@ export async function* runPipeline(input: PipelineInput, now: Date = new Date())
           cache: async () => (await fixture)?.extraction ?? null,
           onRepair: (info) => (repair = info),
         });
-        return { status: 'ok', output: summarizeExtraction(res.data), value: res.data, detail: res.data, tier: res.tier, model: res.model };
+        const fellBack = res.fallbacks.length ? ` · fallback after ${res.fallbacks.join(', ')}` : '';
+        return { status: 'ok', output: `${summarizeExtraction(res.data)}${fellBack}`, value: res.data, detail: res.data, tier: res.tier, model: res.model };
       } catch (err) {
         if (err instanceof LlmUnavailableError) {
           throw new StepError('AI extraction is unavailable right now (all providers failed). Retry, or load a sample which works offline.');

@@ -2,6 +2,7 @@
 
 import { ArrowRight, CalendarCheck2, ClipboardList, FileWarning, Loader2, ScanSearch } from 'lucide-react';
 import type { RunResult } from '@/lib/types';
+import { actionCalendarUrl, eventCalendarUrl } from '@/lib/gcal';
 import { ActionCard } from './result/ActionCard';
 import { ApprovalBar } from './result/ApprovalBar';
 import { AudienceChips } from './result/AudienceChips';
@@ -90,7 +91,7 @@ export function ResultPanel({ run, running, approving, onApprove, onRefresh }: P
           <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">To do</h3>
           <ul className="space-y-2">
             {x.actions.map((a, i) => (
-              <ActionCard key={i} action={a} />
+              <ActionCard key={i} action={a} calendarUrl={actionCalendarUrl(a, x.title)} />
             ))}
           </ul>
         </div>
@@ -101,7 +102,7 @@ export function ResultPanel({ run, running, approving, onApprove, onRefresh }: P
           <h3 className="mb-1.5 text-xs font-semibold text-muted-foreground">Events</h3>
           <ul className="space-y-1.5">
             {x.events.map((e, i) => (
-              <EventRow key={i} event={e} />
+              <EventRow key={i} event={e} calendarUrl={eventCalendarUrl(e, x.title)} />
             ))}
           </ul>
         </div>

@@ -23,8 +23,8 @@ export function stepKind(step: Pick<RunStep, 'step' | 'tier'>): StepKind {
 export function engineLabel(step: Pick<RunStep, 'step' | 'tier' | 'model'>): string | null {
   if (step.tier === 'cache') return 'Cache';
   if (step.tier === 'none') return 'Template';
-  if (step.tier === 'gemini') return 'Gemini';
-  if (step.tier === 'groq') return step.model?.endsWith('-20b') ? 'Groq 20B' : 'Groq 120B';
+  if (step.tier === 'gemini') return 'Gemini 3.5 Flash-Lite';
+  if (step.tier === 'groq') return 'Groq (fallback)';
   const code: Partial<Record<RunStep['step'], string>> = {
     NORMALIZE_DATES: 'chrono-node',
     ROUTE_AUDIENCE: 'class table',

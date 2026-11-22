@@ -53,6 +53,7 @@ export async function readFileText(file: ValidFile, cachedText: string | null): 
   const res = await chat({
     task: 'ocr',
     schema: ocrSchema,
+    jsonSchema: { name: 'transcription', schema: { type: 'object', properties: { text: { type: 'string' } }, required: ['text'] } },
     messages: ocrMessages(file),
     cache: cachedText ? async () => ({ text: cachedText }) : undefined,
   });

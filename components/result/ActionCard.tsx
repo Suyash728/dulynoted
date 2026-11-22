@@ -2,8 +2,9 @@ import { Clock, IndianRupee, MapPin } from 'lucide-react';
 import type { ActionItem } from '@/lib/types';
 import { formatDeadline } from '@/lib/time';
 import { ReviewChip } from './ReviewChip';
+import { GoogleCalendarLink } from './GoogleCalendarLink';
 
-export function ActionCard({ action }: { action: ActionItem }) {
+export function ActionCard({ action, calendarUrl }: { action: ActionItem; calendarUrl: string | null }) {
   return (
     <li className="rounded-lg border bg-card p-3 shadow-sm transition-shadow hover:shadow-md">
       <p className="font-semibold">{action.what}</p>
@@ -53,6 +54,11 @@ export function ActionCard({ action }: { action: ActionItem }) {
             ))}
           </ul>
         </fieldset>
+      )}
+      {calendarUrl && (
+        <div className="mt-2">
+          <GoogleCalendarLink href={calendarUrl} label={action.what} />
+        </div>
       )}
     </li>
   );
