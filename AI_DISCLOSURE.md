@@ -100,3 +100,18 @@ TELEGRAM_DEMO_CHAT_ID=
 CRON_SECRET=
 FORCE_LLM_FAIL=
 ```
+
+### 7. Telegram chat id [12:52 IST]
+```
+[screenshot of Telegram group] not getting reply
+```
+
+### 8. Next steps [12:53 IST]
+```
+what should i do now?
+```
+
+### 9. Bot re-added [12:56 IST]
+```
+i've added the bot again and sent the message on group now wht?
+```
