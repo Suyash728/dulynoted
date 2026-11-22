@@ -549,3 +549,14 @@ tick both boxes in AI_DISCLOSURE, i've verified them
 ```
 there's no demo... the judges will project from the live link... make sure it's in demo ready state
 ```
+
+### 26. Telegram access for judges [14:54 IST]
+```
+Don't make any changes now... just asking was telegram bot id provided for judges?
+```
+```
+add it to readme
+```
+```
+here's the invite link: https://t.me/+aayK31NHZ4AwODI1 add fast and push to main
+```

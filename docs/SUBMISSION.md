@@ -3,7 +3,7 @@
 ## Project name + tagline
 **DulyNoted** — Drop any college circular. Every affected class gets the deadline, the checklist and a calendar reminder, automatically.
 
-Live: https://dulynoted.vercel.app · Repo: https://github.com/Suyash728/dulynoted (branch `build`)
+Live: https://dulynoted.vercel.app · Telegram demo group (watch deliveries arrive): https://t.me/+aayK31NHZ4AwODI1 · Repo: https://github.com/Suyash728/dulynoted (branch `build`)
 
 ## Short description (≤ 100 words)
 DulyNoted uses Google Gemini to turn messy college circulars — PDFs, notice-board photos, WhatsApp forwards — into structured deadlines, checklists and audiences. Gemini 3.5 Flash-Lite reads the notice with schema-constrained JSON and vision; deterministic code then resolves exact dates, finds every affected class and flags clashes with their existing timetable. After one staff approval, each class gets one Telegram message naming exactly which divisions it's for, with one-tap Google Calendar links, and pg_cron sends a follow-up reminder a day before the deadline. Every step is visible in a live run log, with automatic fallbacks so it never fails silently.

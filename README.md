@@ -4,7 +4,7 @@
 
 > **Built with Google Gemini** — `gemini-3.5-flash-lite` reads every circular (structured JSON output + vision OCR), and every deadline ships with a one-tap **Add to Google Calendar** link.
 
-**Live:** https://dulynoted.vercel.app · **Track:** Workflow Automation · **AI disclosure + every build prompt:** [AI_DISCLOSURE.md](AI_DISCLOSURE.md)
+**Live:** https://dulynoted.vercel.app · **See deliveries arrive:** [join the DulyNoted Demo Telegram group](https://t.me/+aayK31NHZ4AwODI1) · **Track:** Workflow Automation · **AI disclosure + every build prompt:** [AI_DISCLOSURE.md](AI_DISCLOSURE.md)
 
 | Clash caught before anyone is told | One approval → class message + calendar | Audit trail of every run |
 |---|---|---|
@@ -70,6 +70,12 @@ Four of the eight steps are plain deterministic code, and the human approval gat
 1. Open https://dulynoted.vercel.app and press **1** (Workshop circular), then **Ctrl/⌘ + Enter**.
 2. Watch the run log: **Extract** is tagged *AI · Gemini 3.5 Flash-Lite*; **Check class timetable** turns amber and a clash card appears.
 3. Press **5** (phone photo) → **Run automation** to see Gemini vision OCR route a notice to all six classes. Open **History** for the audit trail.
+
+## See it arrive in Telegram
+Every **Approve & send** in the live app posts a real message to the **DulyNoted Demo** class group (the bot is `@dulynoted_bot`).
+1. Join the group: **https://t.me/+aayK31NHZ4AwODI1** (watch-only).
+2. In the app, press **1** → **Run automation** → **Approve & send**.
+3. Within a few seconds the group gets the class message — who it's for, any timetable clash, and one-tap **Add to Google Calendar** links. Scheduled reminders also post here 24 h before each deadline.
 
 ## Fallbacks (the demo never dies)
 - **Gemini rate-limited or down** → Groq `gpt-oss` takes over; the Extract row says why ("fallback after gemini: HTTP 429").
