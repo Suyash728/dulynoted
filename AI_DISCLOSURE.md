@@ -83,3 +83,8 @@ Done when: (1) `npm run build` passes, (2) the Vercel URL returns 200, (3) SQL v
 ```
 done supabase secrects copied into .env.local at / .. Vercel deploy i'll do manually (ask me when to do it). okay add the prompts to ai disclosure.
 ```
+
+### 5. GitHub [12:41 IST]
+```
+yes create and push on github
+```
