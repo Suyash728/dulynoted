@@ -191,3 +191,29 @@ DONE ONLY WHEN
 [ ] Redeploy; smoke.sh PASS against Vercel (paste raw output)
 Then list files changed, commit "feat(s2): approval gate, Telegram + .ics delivery, offline cache", and stop.
 ```
+
+### 14. go P4 [13:24 IST]
+```
+go P4
+```
+Executed playbook prompt P4 (plus the Evaluation rules in CLAUDE.md):
+```
+Append this prompt verbatim to PROMPTS.md under "## P4 Slice 3 [HH:MM IST]".
+Enter Plan Mode. Read CLAUDE.md, lib/types.ts, agents/graph.md. Hard time box: 24 minutes. Build the items IN ORDER and stop wherever the box ends; each item must leave the app working. Use Context7 for unpdf, Gemini image input and Supabase pg_cron/pg_net.
+
+1. PDF + image input (10 min)
+   - Enable the Upload tab: accept .pdf, .png, .jpg (≤ 4 MB). INGEST: PDF → unpdf extractText (if < 40 chars of text, treat it as scanned and send page 1 as an image instead); image → gemini-3.5-flash-lite OCR via lib/llm.ts ("transcribe exactly, keep line breaks").
+   - Generate demo files with Playwright MCP: render seed/circulars/exam-form.txt as a printed A4 notice (serif font, college header, stamp-like "sd/-") → public/samples/exam-form.pdf; render scholarship.txt as a slightly rotated, off-white "phone photo" → public/samples/scholarship.jpg (dates rendered for today). Add both as "Load sample" buttons that upload the file.
+2. Scheduled reminder (10 min)
+   - On DELIVER, insert reminders rows: for each action deadline, due_at = deadline − 24 h (skip if in the past).
+   - "Send a demo reminder in 60 s" button on a delivered run → one reminders row due now + 60 s.
+   - app/api/cron/dispatch/route.ts: Bearer CRON_SECRET; sends due unsent reminders via lib/telegram.ts, sets sent_at, appends a SCHEDULE RunStep ("Reminder fired → TE AI&DS A, B") to that run. The result page polls GET /api/runs/[id] every 5 s while any reminder is pending, so the new step appears live.
+   - Via Supabase MCP: enable pg_cron + pg_net and schedule a job every minute that POSTs to <VERCEL_URL>/api/cron/dispatch with the bearer header. Ask me to paste CRON_SECRET; do not read .env files.
+3. History page (4 min): app/history/page.tsx — table of runs (time, source, status, classes reached, time saved) linking to /?run=<id>, which reloads that run with its full log.
+
+DONE ONLY WHEN (for whatever items you finished)
+[ ] `npm run build` passes; smoke.sh still all PASS (paste raw output)
+[ ] Item 1: upload sample PDF and JPG → both reach awaiting_approval (paste the final stream line of each)
+[ ] Item 2: demo reminder arrives in Telegram within ~2 min; SCHEDULE step visible (screenshot docs/s3-reminder.png)
+Redeploy. Commit "feat(s3): pdf/image input, scheduled reminders, history". Then write "SCOPE FROZEN [HH:MM IST]" at the top of CLAUDE.md's Scope section and stop. From now on: fixes, polish and deploy only.
+```

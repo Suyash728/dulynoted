@@ -194,3 +194,93 @@ export async function insertDeliveries(rows: DeliveryRow[]): Promise<void> {
   const { error } = await db().from('deliveries').insert(rows);
   if (error) fail('saving deliveries', error.message);
 }
+
+export interface ReminderInsert {
+  run_id: string;
+  audience_label: string;
+  message: string;
+  due_at: string;
+}
+
+export async function insertReminders(rows: ReminderInsert[]): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await db().from('reminders').insert(rows);
+  if (error) fail('scheduling reminders', error.message);
+}
+
+export interface ClaimedReminder {
+  id: number;
+  run_id: string;
+  audience_label: string;
+  message: string;
+}
+
+/**
+ * Claims due, unsent reminders by stamping sent_at with a conditional update, so two
+ * overlapping cron ticks can never send the same reminder twice.
+ */
+export async function claimDueReminders(limit = 50): Promise<ClaimedReminder[]> {
+  const nowIso = new Date().toISOString();
+  const due = await db().from('reminders').select('id').is('sent_at', null).lte('due_at', nowIso).order('due_at').limit(limit);
+  if (due.error) fail('loading due reminders', due.error.message);
+  const ids = (due.data as { id: number }[]).map((r) => r.id);
+  if (ids.length === 0) return [];
+  const claimed = await db()
+    .from('reminders')
+    .update({ sent_at: nowIso })
+    .in('id', ids)
+    .is('sent_at', null)
+    .select('id, run_id, audience_label, message');
+  if (claimed.error) fail('claiming reminders', claimed.error.message);
+  return claimed.data as ClaimedReminder[];
+}
+
+/** Un-claims reminders whose send failed so the next tick retries them. */
+export async function releaseReminders(ids: number[]): Promise<void> {
+  if (ids.length === 0) return;
+  const { error } = await db().from('reminders').update({ sent_at: null }).in('id', ids);
+  if (error) fail('releasing reminders', error.message);
+}
+
+export async function countPendingReminders(runId: string): Promise<number> {
+  const { count, error } = await db().from('reminders').select('id', { count: 'exact', head: true }).eq('run_id', runId).is('sent_at', null);
+  if (error) fail('counting reminders', error.message);
+  return count ?? 0;
+}
+
+export interface RunSummary {
+  id: string;
+  createdAt: string;
+  sourceName: string;
+  inputType: InputType;
+  status: RunStatus;
+  classes: number;
+  students: number;
+  manualMin: number | null;
+  autoSec: number | null;
+}
+
+/** Latest runs for the history page; reads only summary fields out of the stored result. */
+export async function listRecentRuns(limit = 50): Promise<RunSummary[]> {
+  const { data, error } = await db()
+    .from('runs')
+    .select('id, created_at, source_name, input_type, status, result->recipients, result->timeSaved')
+    .order('created_at', { ascending: false })
+    .limit(limit);
+  if (error) fail('loading history', error.message);
+  type Row = {
+    id: string; created_at: string; source_name: string | null; input_type: InputType; status: RunStatus;
+    recipients: { size: number }[] | null; timeSaved: { manualMin: number; autoSec: number } | null;
+  };
+  return (data as unknown as Row[]).map((r) => ({
+    id: r.id,
+    createdAt: r.created_at,
+    sourceName: r.source_name ?? '—',
+    inputType: r.input_type,
+    status: r.status,
+    classes: r.recipients?.length ?? 0,
+    students: (r.recipients ?? []).reduce((s, x) => s + (x.size ?? 0), 0),
+    manualMin: r.timeSaved?.manualMin ?? null,
+    autoSec: r.timeSaved?.autoSec ?? null,
+  }));
+}

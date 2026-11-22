@@ -69,5 +69,29 @@ export function useRunStream() {
     [stream],
   );
 
-  return { state, start, approve };
+  /** Fetches a stored run (history links, reminder polling). Returns the run or null. */
+  const refresh = useCallback(async (runId: string): Promise<RunResult | null> => {
+    try {
+      const res = await fetch(`/api/runs/${encodeURIComponent(runId)}`, { cache: 'no-store' });
+      const env = (await res.json()) as ApiEnvelope<RunResult>;
+      if (!env.success || !env.data) throw new Error(env.error ?? 'Run not found');
+      const run = env.data;
+      setState((s) => ({ ...s, run, steps: run.steps }));
+      return run;
+    } catch (err) {
+      setState((s) => ({ ...s, error: err instanceof Error ? err.message : 'Could not load the run' }));
+      return null;
+    }
+  }, []);
+
+  const load = useCallback(
+    async (runId: string) => {
+      setState({ ...INITIAL, phase: 'running' });
+      const run = await refresh(runId);
+      setState((s) => ({ ...s, phase: run ? 'done' : 'error' }));
+    },
+    [refresh],
+  );
+
+  return { state, start, approve, load, refresh };
 }

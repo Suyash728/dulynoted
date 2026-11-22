@@ -9,7 +9,8 @@
     "lint": "next lint",
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.mjs",
-    "fixtures": "tsx scripts/make-fixtures.ts"
+    "fixtures": "tsx scripts/make-fixtures.ts",
+    "demo-files": "tsx scripts/make-demo-files.ts"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.4.0",

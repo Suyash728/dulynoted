@@ -11,7 +11,7 @@ import { validateJson } from './llm-json';
  * Each tier gets one call plus at most ONE repair call when the JSON fails zod.
  */
 
-export type LlmTask = 'extract' | 'compose';
+export type LlmTask = 'extract' | 'compose' | 'ocr';
 export type Message = OpenAI.Chat.Completions.ChatCompletionMessageParam;
 
 export interface ChatResult<T> {
@@ -52,12 +52,12 @@ export class LlmUnavailableError extends Error {
   }
 }
 
-const TIMEOUT_MS: Record<LlmTask, number> = { extract: 8_000, compose: 3_000 };
-const MAX_TOKENS: Record<LlmTask, number> = { extract: 2_000, compose: 400 };
+const TIMEOUT_MS: Record<LlmTask, number> = { extract: 8_000, compose: 3_000, ocr: 15_000 };
+const MAX_TOKENS: Record<LlmTask, number> = { extract: 2_000, compose: 400, ocr: 2_500 };
 
 const GROQ_BASE = 'https://api.groq.com/openai/v1';
 const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta/openai/';
-const GROQ_MODEL: Record<LlmTask, string> = { extract: 'openai/gpt-oss-120b', compose: 'openai/gpt-oss-20b' };
+const GROQ_MODEL: Record<Exclude<LlmTask, 'ocr'>, string> = { extract: 'openai/gpt-oss-120b', compose: 'openai/gpt-oss-20b' };
 const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 let groq: OpenAI | null = null;
@@ -89,12 +89,12 @@ function openAiTier(
   };
 }
 
-/** Live tiers for a task, skipping providers with no key or when FORCE_LLM_FAIL is set. */
+/** Live tiers for a task, skipping providers with no key or when FORCE_LLM_FAIL is set. Image input (ocr) is Gemini-only. */
 export function liveTiers(task: LlmTask): LiveTier[] {
   const e = env();
   if (e.FORCE_LLM_FAIL) return [];
   const tiers: LiveTier[] = [];
-  if (e.GROQ_API_KEY) {
+  if (e.GROQ_API_KEY && task !== 'ocr') {
     groq ??= new OpenAI({ apiKey: e.GROQ_API_KEY, baseURL: GROQ_BASE });
     tiers.push(openAiTier(groq, 'groq', GROQ_MODEL[task], task));
   }

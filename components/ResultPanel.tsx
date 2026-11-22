@@ -20,9 +20,10 @@ interface Props {
   running: boolean;
   approving: boolean;
   onApprove: () => void;
+  onRefresh: () => Promise<RunResult | null> | null;
 }
 
-export function ResultPanel({ run, running, approving, onApprove }: Props) {
+export function ResultPanel({ run, running, approving, onApprove, onRefresh }: Props) {
   if (!run?.extraction) {
     return (
       <section aria-labelledby="result-title" className="rounded-lg border bg-card p-4">
@@ -89,7 +90,7 @@ export function ResultPanel({ run, running, approving, onApprove }: Props) {
       <AudienceChips recipients={run.recipients} />
       <DigestPreview digests={run.digests} />
 
-      <ApprovalBar run={run} approving={approving} onApprove={onApprove} />
+      <ApprovalBar run={run} approving={approving} onApprove={onApprove} onRefresh={onRefresh} />
     </section>
   );
 }

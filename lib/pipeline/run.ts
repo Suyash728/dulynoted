@@ -7,6 +7,9 @@ import { createRun, finishRun, listAudiences, listCalendarEvents } from '../db';
 import { Recorder, StepError } from './recorder';
 import { loadFixture, loadSampleText, type Fixture } from '../seed';
 import { cleanText, describeText } from './ingest';
+import { readFileText } from './ingest-file';
+import type { ValidFile } from '../file-input';
+
 import { describeAudience, extractCirculars, summarizeExtraction } from './extract';
 import { normalizeExtraction } from './normalize';
 import { matchAudiences } from './route';
@@ -20,15 +23,22 @@ import { formatTime } from '../time';
  * Yields StreamEvents for the live run log and persists every finished step. Ends 'awaiting_approval'.
  */
 
-export async function* runPipeline(input: RunInput, now: Date = new Date()): AsyncGenerator<StreamEvent> {
+export type PipelineInput = RunInput & { file?: ValidFile };
+
+function sourceLabel(input: PipelineInput, sampleLabel: string | null): string {
+  if (input.file) return sampleLabel ? `Sample ${input.file.kind === 'pdf' ? 'PDF' : 'photo'}: ${sampleLabel}` : input.file.name;
+  return sampleLabel ? `Sample: ${sampleLabel}` : 'Pasted text';
+}
+
+export async function* runPipeline(input: PipelineInput, now: Date = new Date()): AsyncGenerator<StreamEvent> {
   const started = Date.now();
   const sample = input.sampleId ? await loadSampleText(input.sampleId) : null;
-  const rawText = sample?.text ?? input.text ?? '';
-  const sourceName = sample ? `Sample: ${sample.label}` : 'Pasted text';
+  const rawText = input.file ? '' : sample?.text ?? input.text ?? '';
+  const sourceName = sourceLabel(input, sample?.label ?? null);
 
   let runId: string;
   try {
-    runId = await createRun({ inputType: 'text', sourceName, inputText: rawText });
+    runId = await createRun({ inputType: input.inputType, sourceName, inputText: input.file ? `[file] ${input.file.name}` : rawText });
   } catch {
     yield { type: 'error', error: 'Could not start the run — the database is unreachable. Please retry in a moment.' };
     return;
@@ -39,7 +49,7 @@ export async function* runPipeline(input: RunInput, now: Date = new Date()): Asy
   const result: RunResult = {
     id: runId,
     status: 'running',
-    inputType: 'text',
+    inputType: input.inputType,
     sourceName,
     extraction: null,
     recipients: [],
@@ -52,6 +62,16 @@ export async function* runPipeline(input: RunInput, now: Date = new Date()): Asy
   try {
     // 1 INGEST
     const text = yield* rec.run('INGEST', sourceName, async () => {
+      if (input.file) {
+        const file = input.file;
+        const read = await readFileText(file, sample?.text ?? null).catch((err: unknown) => {
+          if (err instanceof LlmUnavailableError) throw new StepError("Couldn't read this file — paste the text or load a sample.");
+          throw err;
+        });
+        const clean = cleanText(read.text);
+        const how = read.method === 'pdf-text' ? 'PDF text layer' : 'OCR';
+        return { status: 'ok', output: `${how} · ${describeText(clean)}`, value: clean, detail: { preview: clean.slice(0, 280) }, tier: read.tier, model: read.model };
+      }
       const clean = cleanText(rawText);
       if (clean.length < 20) throw new StepError('This text is too short to be a circular — paste the full notice or load a sample.');
       return { status: 'ok', output: describeText(clean), value: clean, detail: { preview: clean.slice(0, 280) } };
@@ -84,12 +104,12 @@ export async function* runPipeline(input: RunInput, now: Date = new Date()): Asy
     }
 
     // 3 NORMALIZE_DATES
-    const extraction: Extraction = yield* rec.run('NORMALIZE_DATES', `${raw.actions.length + raw.events.length} date phrases`, async () => {
+    const extraction: Extraction = yield* rec.run('NORMALIZE_DATES', `${raw.actions.length + raw.events.length} date phrase${raw.actions.length + raw.events.length === 1 ? '' : 's'}`, async () => {
       const n = normalizeExtraction(raw, now);
       const ok = n.resolved.filter((x) => x.iso).length;
       return {
         status: n.reviewCount > 0 ? 'warn' : 'ok',
-        output: n.reviewCount > 0 ? `${ok} resolved · ${n.reviewCount} need${n.reviewCount === 1 ? 's' : ''} review` : `${ok} dates resolved to exact IST times`,
+        output: n.reviewCount > 0 ? `${ok} resolved · ${n.reviewCount} need${n.reviewCount === 1 ? 's' : ''} review` : `${ok} date${ok === 1 ? '' : 's'} resolved to exact IST times`,
         value: n.extraction,
         detail: n.resolved,
       };

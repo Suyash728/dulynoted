@@ -56,14 +56,14 @@ export const extractionSchema = z.object({
 
 export const digestSchema = z.object({ digest: str.min(1) });
 
-/** POST /api/runs FormData (text-only in slice 1). */
+/** POST /api/runs FormData. For pdf/image the file itself is validated in the route (lib/file-input.ts). */
 export const runInputSchema = z
   .object({
-    inputType: z.literal('text'),
+    inputType: z.enum(['text', 'pdf', 'image']),
     text: z.string().max(MAX_TEXT_CHARS, `Text is longer than ${MAX_TEXT_CHARS} characters`).optional(),
     sampleId: z.enum(SAMPLE_IDS).optional(),
   })
-  .refine((v) => Boolean(v.sampleId) || Boolean(v.text?.trim()), {
+  .refine((v) => v.inputType !== 'text' || Boolean(v.sampleId) || Boolean(v.text?.trim()), {
     message: 'Paste a circular or load a sample first',
   });
 

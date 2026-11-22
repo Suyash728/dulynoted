@@ -80,6 +80,22 @@ check "approve ?dryRun=1 ends with status delivered" "$(echo "$A" | judge 'R && 
 A2=$(curl -s --max-time 20 -X POST "$BASE/api/runs/$RID/approve?dryRun=1")
 check "second approve is refused (409 envelope, no double send)" "$(echo "$A2" | envelope 'J.success === false && /already/.test(J.error)')"
 
+R1=$(curl -s --max-time 20 -X POST "$BASE/api/runs/$RID/remind-demo")
+check "demo reminder refused for a dry-run delivery (409)" "$(echo "$R1" | envelope 'J.success === false && /real delivery/.test(J.error)')"
+
+CR=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 -X POST "$BASE/api/cron/dispatch")
+check "cron dispatch without bearer is 401" "$([ "$CR" = 401 ] && echo true || echo false)" "HTTP $CR"
+
+DIR="$(cd "$(dirname "$0")/.." && pwd)"
+P=$(curl -sN --max-time 60 -X POST "$BASE/api/runs" -F inputType=pdf -F sampleId=exam-form -F "file=@$DIR/public/samples/exam-form.pdf;type=application/pdf")
+check "upload PDF reaches awaiting_approval" "$(echo "$P" | judge 'R && R.status === "awaiting_approval" && R.inputType === "pdf"')"
+
+F=$(printf 'not a pdf' | curl -s --max-time 20 -X POST "$BASE/api/runs" -F inputType=pdf -F "file=@-;filename=fake.pdf;type=application/pdf")
+check "rejects a fake PDF by its magic bytes" "$(echo "$F" | envelope 'J.success === false && /PDF, PNG or JPG/.test(J.error)')"
+
+H=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE/history")
+check "GET /history returns 200" "$([ "$H" = 200 ] && echo true || echo false)" "HTTP $H"
+
 echo "---"
 echo "$PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]

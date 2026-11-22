@@ -1,7 +1,8 @@
 import 'server-only';
 import type { RunResult, RunStatus, StreamEvent } from '../types';
 import { env } from '../env';
-import { getRunResult, insertDeliveries, setRunStatus, type DeliveryRow } from '../db';
+import { getRunResult, insertDeliveries, insertReminders, setRunStatus, type DeliveryRow } from '../db';
+import { planDeadlineReminders } from '../reminders';
 import { buildIcs } from '../ics';
 import { buildChatMessages, sendDocument, sendMessage } from '../telegram';
 import { formatTime } from '../time';
@@ -89,9 +90,12 @@ export async function* approveRun(runId: string, opts: ApproveOptions): AsyncGen
         const reason = failed[0].message.description ?? failed[0].document.description ?? 'unknown error';
         return { status: 'warn', output: `Telegram unavailable (${reason}) — .ics ready to download`, value: 'awaiting_approval' as RunStatus, detail };
       }
+      // Follow-up automation: a Telegram reminder 24 h before each deadline (sent by /api/cron/dispatch).
+      const reminders = planDeadlineReminders(run);
+      await insertReminders(reminders);
       return {
         status: 'ok',
-        output: `Delivered to ${classes(labels.length)} · ${plural(messages.length, 'message')} · ${plural(messages.length, 'calendar file')}`,
+        output: `Delivered to ${classes(labels.length)} · ${plural(messages.length, 'message')} · ${plural(messages.length, 'calendar file')}${reminders.length ? ` · ${plural(new Set(reminders.map((r) => r.due_at)).size, 'reminder')} scheduled` : ''}`,
         value: 'delivered' as RunStatus,
         detail,
       };
