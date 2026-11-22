@@ -217,3 +217,32 @@ DONE ONLY WHEN (for whatever items you finished)
 [ ] Item 2: demo reminder arrives in Telegram within ~2 min; SCHEDULE step visible (screenshot docs/s3-reminder.png)
 Redeploy. Commit "feat(s3): pdf/image input, scheduled reminders, history". Then write "SCOPE FROZEN [HH:MM IST]" at the top of CLAUDE.md's Scope section and stop. From now on: fixes, polish and deploy only.
 ```
+
+### 15. P5 [13:52 IST]
+```
+P5
+```
+Executed playbook prompt P5:
+```
+Append this prompt verbatim to PROMPTS.md under "## P5 Polish [HH:MM IST]".
+Scope is FROZEN. Only fixes, states and polish. Read CLAUDE.md first.
+
+1. States: every button has loading/disabled states; empty state on first load; friendly error card for stream errors with a "Retry" and a "Use sample instead" button; amber "needs review" chips; mobile layout check at 390 px.
+2. Speed: make sure the workshop sample completes in < 15 s on Vercel; if EXTRACT is slow, lower max_tokens and keep reasoning_effort low.
+3. Header: "DulyNoted" + tagline + a small "How it works" popover (the 8 steps, one line each) + link to /history.
+4. Demo test: use the demo-tester subagent (or Playwright MCP directly) on the Vercel URL, clicking this exact path and screenshotting each numbered step into docs/demo/:
+   (1) open / → (2) click "Load sample: Workshop" → (3) click "Run automation" → (4) wait for CLASH_CHECK amber + red banner → (5) expand the EXTRACT row → (6) click "Approve & send" → (7) wait for DELIVER ok → (8) click "Download .ics" → (9) open /history.
+   Report any step slower than 5 s or any console error. Fix only what breaks the path.
+5. Force-fail test: set FORCE_LLM_FAIL=1 on a Vercel preview (not production), repeat steps 1–7, confirm tier "cache" shows and nothing crashes. Remove the var afterwards.
+6. Write docs/DEMO.md: the 90-second script below, adjusted to the real UI labels.
+
+90-SECOND DEMO SCRIPT
+0–10 s  "Every college sends 5–10 circulars a week as WhatsApp forwards and PDFs. Students miss deadlines; staff re-type them into groups." Show the messy workshop circular.
+10–30 s Click Load sample → Run automation. Run log fills: INGEST → EXTRACT (Groq) → NORMALIZE ("tomorrow 5 pm" → exact date) → ROUTE (2 classes, 126 students) → CLASH_CHECK turns amber.
+30–45 s WOW: red banner — "Workshop clashes with Unit Test 2, TE AI&DS, 10:00". Nobody noticed it on paper.
+45–65 s Action card + Telegram preview. Click Approve & send → phone (screen-mirrored) buzzes in the class group with the digest + .ics; tap → deadline lands in the calendar with reminders.
+65–80 s Drop the PDF / phone photo of the scholarship notice → same pipeline, all classes FE–BE.
+80–90 s Time-saved pill: "≈ 19 min of manual work → 12 s, per circular". "Built entirely from prompts — every one is in PROMPTS.md."
+
+DONE ONLY WHEN: all 9 demo screenshots exist, force-fail test passes, `npm run build` passes, redeployed. Commit "chore: polish, demo test, demo script" and stop.
+```

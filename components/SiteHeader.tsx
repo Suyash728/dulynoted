@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { HowItWorks } from './HowItWorks';
 
 export function SiteHeader() {
   return (
@@ -15,7 +16,10 @@ export function SiteHeader() {
           </p>
         </div>
         <nav aria-label="Main">
-          <ul className="flex gap-4 text-sm font-medium">
+          <ul className="flex items-center gap-4 text-sm font-medium">
+            <li>
+              <HowItWorks />
+            </li>
             <li>
               <Link href="/" className="text-primary underline-offset-4 hover:underline">
                 New circular

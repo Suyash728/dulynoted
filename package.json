@@ -10,7 +10,8 @@
     "test": "vitest run",
     "test:e2e": "node scripts/e2e.mjs",
     "fixtures": "tsx scripts/make-fixtures.ts",
-    "demo-files": "tsx scripts/make-demo-files.ts"
+    "demo-files": "tsx scripts/make-demo-files.ts",
+    "demo:path": "node scripts/demo-path.mjs"
   },
   "dependencies": {
     "@radix-ui/react-scroll-area": "^1.4.0",
