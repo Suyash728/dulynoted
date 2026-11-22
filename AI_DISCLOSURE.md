@@ -123,3 +123,36 @@ yes all secrects are added to .env.local
 [screenshot: Hack2Skill "AI Code Submission" — evaluated by AI on: Code Quality, Security, Efficiency, Testing, Accessibility, Problem Statement Alignment]
 also make sure you keep this criteria in mind and the code will be equalvaluated by hack2skill ai and judges later
 ```
+
+### 11. Problem statement → P2 [12:59 IST]
+Answer to "What is the problem statement?": `Open Workflow Automation`. Executed playbook prompt P2 (plus the Evaluation rules in CLAUDE.md):
+```
+Append this prompt verbatim to PROMPTS.md under "## P2 Slice 1 [HH:MM IST]".
+Enter Plan Mode. Read CLAUDE.md, lib/types.ts, agents/graph.md. Use Context7 for openai (custom baseURL), chrono-node and Next.js 14 streaming route handlers if unsure.
+
+Build Slice 1: "Click 'Load sample' → watch 6 pipeline steps light up in the run log → an action card shows what to do, by when, for whom, with a clash warning."
+
+IN SCOPE
+- lib/samples.ts: list the 3 seed circulars (id, label, file); render {{D+n}} tokens as DD/MM/YYYY relative to today in Asia/Kolkata.
+- lib/llm.ts: router exactly as CLAUDE.md (groq → gemini → cache), timeouts via AbortController, json_object + zod validation + one REPAIR call, returns {data, tier, model, ms}. Cache tier returns null for now if no fixture exists (P3 adds fixtures).
+- lib/db.ts: server-only Supabase client with the service-role key.
+- lib/pipeline/{ingest,extract,normalize,route,clash,compose,run}.ts — steps 1–6 per agents/graph.md. run.ts is an async generator that yields RunStep events and finally the RunResult; it inserts runs/run_steps rows and sets status 'awaiting_approval'. Extraction prompt: system prompt with the Extraction JSON shape, rules "never invent dates; copy the original wording into deadlineText/dateText; audience years use FE/SE/TE/BE".
+- app/api/runs/route.ts: POST FormData (inputType=text, text | sampleId) → Response with a ReadableStream of NDJSON StreamEvent lines (content-type application/x-ndjson), maxDuration 60. Text input only in this slice.
+- app/api/runs/[id]/route.ts: GET → ApiEnvelope<RunResult>.
+- app/page.tsx + components/: 3-pane layout (stacks on mobile).
+  • InputPanel: Tabs "Paste" (Textarea) | "Upload" (disabled, "coming soon"); 3 "Load sample" buttons; "Run automation" button.
+  • RunLog (right): vertical stepper; per row icon + StepName + status badge (running = pulsing, ok = green, warn = amber, error = red, skipped = grey) + tier badge (Groq / Gemini / Cache) + ms; click to expand input → output + detail JSON in a monospace block. Rows animate in (150 ms CSS), no server sleeps.
+  • ResultPanel: ActionCard per action (what, deadline as "in 3 days · 27 Nov, 11:59 pm", location, required-docs checklist, fee), events list, audience chips with student counts, red ClashBanner listing clashes, DigestPreview (Telegram-style bubble), TimeSaved pill "≈ 19 min of manual work → 12 s" with the formula in a Tooltip. needsReview items get an amber "check date" chip.
+  • Disabled "Approve & send" button (P3 enables it).
+  • Visual direction: calm "notice-board paper" look — off-white cards, one accent colour, monospace run log, no gradients, no emoji spam. Empty state explains the 3 steps in one line each.
+- scripts/smoke.sh BASE_URL: POST sampleId=workshop, read the stream, assert the last line is a result with status awaiting_approval and that a CLASH_CHECK step has status warn; POST sampleId=exam-form and assert ≥ 1 action with a non-null deadline. Print PASS/FAIL per assertion.
+
+OUT OF SCOPE: approve/deliver, Telegram, .ics, PDF/image, history, cron, auth.
+
+DONE ONLY WHEN
+[ ] `npm run build` passes
+[ ] `bash scripts/smoke.sh http://localhost:3000` → all PASS (paste raw output)
+[ ] Playwright MCP: open localhost:3000, click "Load sample: Workshop", click "Run automation", wait for the clash banner, screenshot to docs/s1.png
+[ ] redeploy to Vercel and run smoke.sh against the Vercel URL (paste raw output)
+Then list files changed, commit "feat(s1): hero pipeline with live run log and clash detection", and stop. Do not start Slice 2.
+```
