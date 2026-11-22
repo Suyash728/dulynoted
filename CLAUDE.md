@@ -52,6 +52,7 @@ seed/circulars/*.txt (date tokens {{D+n}}) · seed/fixtures/*.json · public/sam
 INGEST → EXTRACT (→ REPAIR) → NORMALIZE_DATES → ROUTE_AUDIENCE → CLASH_CHECK → COMPOSE → [APPROVE gate] → DELIVER → SCHEDULE (S3). Plain function calls. No LangGraph / CrewAI / n8n.
 
 ## Scope (FROZEN)
+SCOPE FROZEN [13:48 IST] — from now on: fixes, polish and deploy only.
 MUST (by T+2:00):
 1. Hero pipeline on pasted text / sample buttons with a live step-by-step run log + time-saved number. [working output, AI use, UX]
 2. Clash detection against the seeded class calendar, shown as a banner and a yellow run-log step. [usefulness, novelty]
@@ -70,3 +71,6 @@ WON'T: auth, email, WhatsApp, n8n, multi-college, inline editing of extracted fi
 - chrono-node 2.10: `chrono.parse(text, { instant, timezone: 'Asia/Kolkata' }, { forwardDate: true })`
 - unpdf 2.2: `extractText(new Uint8Array(buf), { mergePages: true }) → { totalPages, text }`
 - Groq gpt-oss: json_schema support is flaky per community reports → use json_object + zod + 1 repair
+- Next 14 Data Cache caches GET fetches: the Supabase client in lib/db.ts forces `cache: 'no-store'` — keep it
+- pg_cron job `dulynoted-dispatch` (every minute) reads its bearer from Vault secret `dulynoted_cron_secret`
+- Demo uploads in public/samples are rendered for a fixed day: re-run `npm run demo-files` (and reseed calendar) on demo day

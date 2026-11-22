@@ -11,6 +11,8 @@ function db(): SupabaseClient {
   const e = env();
   client ??= createClient(e.NEXT_PUBLIC_SUPABASE_URL, e.SUPABASE_SERVICE_ROLE_KEY, {
     auth: { persistSession: false, autoRefreshToken: false },
+    // Next 14 caches GET fetches in its Data Cache; run state must always be read fresh.
+    global: { fetch: (input, init) => fetch(input, { ...init, cache: 'no-store' }) },
   });
   return client;
 }
