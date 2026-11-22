@@ -28,10 +28,14 @@ describe('Google Calendar links', () => {
   });
 
   it('puts escaped links in the Telegram message and credits Gemini only when it composed', () => {
-    const plain = buildChatMessages(run, '-100')[0].html;
-    expect(plain).toContain('➕ <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Due');
+    const plain = buildChatMessages(run, '-100', new Date('2026-11-22T06:00:00Z'))[0].html;
+    expect(plain).toContain('📅 <b>Add to your Google Calendar</b>');
+    expect(plain).toContain('• <a href="https://calendar.google.com/calendar/render?action=TEMPLATE&amp;text=Due');
+    expect(plain).toContain('>Register</a> — Mon, 23 Nov, 5:00 pm');
+    expect(plain).toContain('⏰ This group will get a reminder 24 h before each deadline.');
     expect(plain).not.toContain('summarised by Gemini');
+    expect(plain).not.toContain('.ics');
     const withGemini = sampleRun({ steps: [{ runId: run.id, seq: 6, step: 'COMPOSE', status: 'ok', input: '', output: '', tier: 'gemini', at: '' }] });
-    expect(buildChatMessages(withGemini, '-100')[0].html).toContain('Calendar file attached ⤵ · summarised by Gemini');
+    expect(buildChatMessages(withGemini, '-100')[0].html).toContain('<i>Sent by DulyNoted · summarised by Gemini</i>');
   });
 });

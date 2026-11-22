@@ -32,7 +32,7 @@ await page.getByRole('status').filter({ hasText: /Dry run|Delivered/ }).waitFor(
 console.log(`delivered (dry run) after ${Date.now() - t0} ms`);
 await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s2.png', fullPage: true });
-const icsHref = await page.getByRole('link', { name: 'Download .ics' }).getAttribute('href');
+const icsHref = await page.getByRole('link', { name: /\.ics/ }).getAttribute('href');
 const ics = await (await page.request.get(new URL(icsHref, base).toString())).text();
 console.log(`ics download has alarms: ${ics.includes('BEGIN:VALARM')}`);
 

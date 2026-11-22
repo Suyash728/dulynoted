@@ -83,21 +83,21 @@ export function ApprovalBar({ run, approving, onApprove, onRefresh }: Props) {
       )}
 
       <div className="flex flex-col gap-2 sm:flex-row">
-        <Button type="button" onClick={onApprove} disabled={!canApprove} className="flex-1" aria-describedby="approve-note">
+        <Button type="button" onClick={onApprove} disabled={!canApprove} className="btn-gradient h-11 flex-1 rounded-xl font-semibold shadow-md" aria-describedby="approve-note">
           {approving ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <Send aria-hidden className="h-4 w-4" />}
           {approving ? 'Sending…' : delivered ? `Sent to ${classes} classes` : `Approve & send to ${classes} classes`}
         </Button>
-        <Button asChild variant="outline">
-          <a href={`/api/runs/${run.id}/ics`} download>
+        <Button asChild variant="outline" className="h-11 rounded-xl">
+          <a href={`/api/runs/${run.id}/ics`} download aria-label="Download calendar file for Apple Calendar or Outlook (.ics)">
             <CalendarPlus aria-hidden className="h-4 w-4" />
-            Download .ics
+            Apple / Outlook (.ics)
           </a>
         </Button>
       </div>
 
       {realDelivery && (
         <div className="space-y-1">
-          <Button type="button" variant="secondary" className="w-full" onClick={() => void scheduleDemo()} disabled={Boolean(reminder && !fired)}>
+          <Button type="button" variant="secondary" className="h-10 w-full rounded-xl" onClick={() => void scheduleDemo()} disabled={Boolean(reminder && !fired)}>
             {reminder && !fired ? <Loader2 aria-hidden className="h-4 w-4 animate-spin" /> : <AlarmClock aria-hidden className="h-4 w-4" />}
             {reminder && !fired ? 'Reminder scheduled…' : 'Send a demo reminder in 60 s'}
           </Button>
@@ -113,7 +113,7 @@ export function ApprovalBar({ run, approving, onApprove, onRefresh }: Props) {
       )}
 
       <p id="approve-note" className="text-center text-[11px] text-muted-foreground">
-        Nothing is sent without a staff approval. Students tap the calendar file to get reminders 1 day and 2 hours before each deadline.
+        Nothing is sent without a staff approval. Students get one-tap “Add to Google Calendar” links in the message, and the group is reminded 24 h before each deadline.
       </p>
     </div>
   );

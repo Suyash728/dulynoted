@@ -6,6 +6,7 @@ import type { RunStep, StepName, StepStatus } from '@/lib/types';
 import { engineLabel, stepKind, type StepKind } from '@/lib/step-kind';
 import { cn } from '@/lib/utils';
 import { JsonView } from './result/JsonView';
+import { PanelHeader } from './PanelHeader';
 
 const PLANNED: StepName[] = ['INGEST', 'EXTRACT', 'NORMALIZE_DATES', 'ROUTE_AUDIENCE', 'CLASH_CHECK', 'COMPOSE'];
 const APPROVAL: StepName[] = ['APPROVE', 'DELIVER'];
@@ -59,7 +60,7 @@ function StepRow({ step }: { step: RunStep }) {
       >
         <span className="min-w-0 flex-1">
           <span className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
-            <span className="font-semibold">{STEP_LABEL[step.step]}</span>
+            <span className="font-medium">{STEP_LABEL[step.step]}</span>
             <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide', s.className, 'bg-muted')}>{s.label}</span>
             <span className={cn('rounded px-1.5 py-0.5 text-[10px] font-semibold', KIND_STYLE[kind])}>
               {kind}
@@ -67,13 +68,13 @@ function StepRow({ step }: { step: RunStep }) {
             </span>
             {step.ms !== undefined && <span className="text-[11px] text-muted-foreground">{step.ms} ms</span>}
           </span>
-          <span className="mt-0.5 block text-xs text-muted-foreground">{step.output || step.input}</span>
+          <span className="mt-0.5 block font-mono text-[11px] leading-snug text-muted-foreground">{step.output || step.input}</span>
         </span>
         <ChevronRight aria-hidden className={cn('mt-0.5 h-4 w-4 shrink-0 text-muted-foreground transition-transform', open && 'rotate-90')} />
         <span className="sr-only">{open ? 'Hide details' : 'Show details'}</span>
       </button>
       {open && (
-        <div id={detailId} className="space-y-1.5 pb-3 pr-2 text-xs">
+        <div id={detailId} className="space-y-1.5 pb-3 pr-2 font-mono text-xs">
           <p>
             <span className="font-semibold">Step:</span> {step.step}
           </p>
@@ -103,16 +104,22 @@ export function RunLog({ steps, active, approving }: { steps: RunStep[]; active:
   const aiSteps = steps.filter((s) => s.status !== 'running' && stepKind(s) === 'AI').length;
 
   return (
-    <section aria-labelledby="runlog-title" className="flex h-full flex-col rounded-xl border bg-card shadow-sm">
-      <header className="flex items-center justify-between border-b px-3 py-2.5">
-        <h2 id="runlog-title" className="flex items-center gap-2 text-sm font-semibold">
-          <Activity aria-hidden className="h-4 w-4 text-primary" />3 · Run log
-        </h2>
-        <span className="text-xs text-muted-foreground">
-          {steps.length ? `${finished} steps · ${aiSteps} AI · ${finished - aiSteps} code/human` : 'idle'}
-        </span>
+    <section aria-labelledby="runlog-title" className="surface flex h-full flex-col">
+      <header className="border-b px-5 py-4">
+        <PanelHeader
+          id="runlog-title"
+          step={3}
+          title="Live run log"
+          hint="Every step, what went in and what came out"
+          right={
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <Activity aria-hidden className="h-3 w-3" />
+              {steps.length ? `${finished} done · ${aiSteps} AI` : 'idle'}
+            </span>
+          }
+        />
       </header>
-      <div className="px-2 py-1 font-mono text-sm">
+      <div className="px-3 py-2 text-sm">
         {steps.length === 0 && !active && !approving ? (
           <div className="space-y-2 px-1 py-5 text-xs text-muted-foreground">
             <p>Every pipeline step appears here live — click any row to see exactly what went in and came out.</p>

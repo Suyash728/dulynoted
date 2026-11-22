@@ -35,7 +35,7 @@ await step(5, 'expand-extract', () => page.getByRole('button', { name: /Extract 
 await step(6, 'approve', () => page.getByRole('button', { name: /Approve & send/ }).click());
 await step(7, 'delivered', () => page.getByRole('status').filter({ hasText: /Delivered to|Dry run/ }).waitFor({ timeout: 30_000 }));
 await step(8, 'download-ics', async () => {
-  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: 'Download .ics' }).click()]);
+  const [download] = await Promise.all([page.waitForEvent('download'), page.getByRole('link', { name: /\.ics/ }).click()]);
   console.log(`    downloaded ${download.suggestedFilename()}`);
 });
 await step(9, 'history', async () => {

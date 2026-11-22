@@ -3,8 +3,7 @@ import type { RunResult, RunStatus, StreamEvent } from '../types';
 import { env } from '../env';
 import { getRunResult, insertDeliveries, insertReminders, setRunStatus, type DeliveryRow } from '../db';
 import { planDeadlineReminders } from '../reminders';
-import { buildIcs } from '../ics';
-import { buildChatMessages, sendDocument, sendMessage } from '../telegram';
+import { buildChatMessages, calendarLinks, sendMessage } from '../telegram';
 import { formatTime } from '../time';
 import { Recorder } from './recorder';
 
@@ -39,7 +38,7 @@ export async function* approveRun(runId: string, opts: ApproveOptions): AsyncGen
       value: null,
     }));
 
-    finalStatus = yield* rec.run('DELIVER', `${classes(run.recipients.length)} · digest + calendar file`, async () => {
+    finalStatus = yield* rec.run('DELIVER', `${classes(run.recipients.length)} · digest + Google Calendar links`, async () => {
       const e = env();
       const messages = buildChatMessages(run, e.TELEGRAM_DEMO_CHAT_ID);
       const labels = messages.flatMap((m) => m.labels);
@@ -47,55 +46,47 @@ export async function* approveRun(runId: string, opts: ApproveOptions): AsyncGen
       if (opts.dryRun) {
         return {
           status: 'skipped',
-          output: `Dry run — would send ${plural(messages.length, 'message')} + calendar file to ${classes(labels.length)}`,
+          output: `Dry run — would send ${plural(messages.length, 'message')} with Google Calendar links to ${classes(labels.length)}`,
           value: 'delivered' as RunStatus,
           detail: messages.map((m) => ({ chat: maskChat(m.chatId), labels: m.labels, html: m.html })),
         };
       }
       if (!e.TELEGRAM_BOT_TOKEN || messages.length === 0) {
-        return { status: 'warn', output: 'Telegram unavailable — .ics ready to download', value: 'awaiting_approval' as RunStatus };
+        return { status: 'warn', output: 'Telegram not configured — use the Google Calendar buttons or .ics instead', value: 'awaiting_approval' as RunStatus };
       }
 
       const token = e.TELEGRAM_BOT_TOKEN;
-      const ics = buildIcs(run);
-      const results = await Promise.all(
-        messages.map(async (m) => {
-          const message = await sendMessage(token, m.chatId, m.html);
-          const document = message.ok
-            ? await sendDocument(token, m.chatId, ics, `${plural(ics.eventCount, 'date')} with reminders — tap to add to your calendar`)
-            : { ok: false, description: 'skipped after message failed' };
-          return { m, message, document };
-        }),
-      );
+      // One message per class group: digest + one-tap Google Calendar links (no file for students to import).
+      const results = await Promise.all(messages.map(async (m) => ({ m, message: await sendMessage(token, m.chatId, m.html) })));
 
-      const rows: DeliveryRow[] = results.flatMap(({ m, message, document }) =>
+      const rows: DeliveryRow[] = results.flatMap(({ m, message }) =>
         m.labels.map((label) => ({
           run_id: runId,
           audience_label: label,
           channel: 'telegram' as const,
-          status: message.ok && document.ok ? ('sent' as const) : ('failed' as const),
-          payload: { messageOk: message.ok, documentOk: document.ok, messageId: message.messageId ?? null, error: message.description ?? document.description ?? null },
+          status: message.ok ? ('sent' as const) : ('failed' as const),
+          payload: { messageOk: message.ok, messageId: message.messageId ?? null, error: message.description ?? null },
         })),
       );
       await insertDeliveries(rows);
 
-      const detail = results.map(({ m, message, document }) => ({
-        chat: maskChat(m.chatId),
-        labels: m.labels,
-        message: message.ok ? 'ok' : message.description,
-        calendar: document.ok ? 'ok' : document.description,
-      }));
-      const failed = results.filter((r) => !r.message.ok || !r.document.ok);
-      if (failed.length > 0) {
-        const reason = failed[0].message.description ?? failed[0].document.description ?? 'unknown error';
-        return { status: 'warn', output: `Telegram unavailable (${reason}) — .ics ready to download`, value: 'awaiting_approval' as RunStatus, detail };
+      const detail = results.map(({ m, message }) => ({ chat: maskChat(m.chatId), labels: m.labels, message: message.ok ? 'ok' : message.description }));
+      const failed = results.find((r) => !r.message.ok);
+      if (failed) {
+        return {
+          status: 'warn',
+          output: `Telegram unavailable (${failed.message.description ?? 'unknown error'}) — use the Google Calendar buttons or .ics instead`,
+          value: 'awaiting_approval' as RunStatus,
+          detail,
+        };
       }
       // Follow-up automation: a Telegram reminder 24 h before each deadline (sent by /api/cron/dispatch).
       const reminders = planDeadlineReminders(run);
       await insertReminders(reminders);
+      const links = calendarLinks(run).length;
       return {
         status: 'ok',
-        output: `Delivered to ${classes(labels.length)} · ${plural(messages.length, 'message')} · ${plural(messages.length, 'calendar file')}${reminders.length ? ` · ${plural(new Set(reminders.map((r) => r.due_at)).size, 'reminder')} scheduled` : ''}`,
+        output: `Delivered to ${classes(labels.length)} · ${plural(messages.length, 'message')} · ${plural(links, 'Google Calendar link')}${reminders.length ? ` · ${plural(new Set(reminders.map((r) => r.due_at)).size, 'reminder')} scheduled` : ''}`,
         value: 'delivered' as RunStatus,
         detail,
       };

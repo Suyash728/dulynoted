@@ -21,10 +21,15 @@ export default async function Home({ searchParams }: { searchParams: { run?: str
       <a href="#main" className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded focus:bg-card focus:px-3 focus:py-2">
         Skip to content
       </a>
-      <SiteHeader status={dashboard.status} current="home" />
-      <main id="main" className="mx-auto max-w-[1400px] space-y-4 px-4 py-5">
-        <h1 className="sr-only">DulyNoted dashboard — process a circular</h1>
+      <SiteHeader
+        status={dashboard.status}
+        current="home"
+        title="Circular automation dashboard"
+        subtitle="Drop any college circular. Gemini reads it, code checks dates, classes and timetables — one approval sends every class its deadline, checklist and calendar link."
+      >
         <StatsStrip stats={dashboard.stats} />
+      </SiteHeader>
+      <main id="main" className="mx-auto -mt-1 max-w-[1400px] px-4 py-6">
         <Workspace samples={samples} maxChars={MAX_TEXT_CHARS} initialRunId={runId} />
       </main>
     </>

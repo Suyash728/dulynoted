@@ -66,10 +66,10 @@ export default async function HistoryPage({ searchParams }: { searchParams: { fi
 
   return (
     <>
-      <SiteHeader status={status} current="history" />
-      <main id="main" className="mx-auto max-w-[1400px] space-y-4 px-4 py-5">
-        <h1 className="text-xl font-semibold">Run history</h1>
+      <SiteHeader status={status} current="history" title="Run history" subtitle="Every circular processed, with its status, the classes it reached and the time it saved.">
         <StatsStrip stats={stats} />
+      </SiteHeader>
+      <main id="main" className="mx-auto max-w-[1400px] space-y-4 px-4 py-6">
         {!status.database && (
           <p role="alert" className="flex items-center gap-2 rounded-lg border border-amber-300 bg-amber-50 p-3 text-sm text-amber-900">
             <AlertTriangle aria-hidden className="h-4 w-4" />
@@ -99,7 +99,7 @@ export default async function HistoryPage({ searchParams }: { searchParams: { fi
             })}
           </ul>
         </nav>
-        <div className="overflow-x-auto rounded-xl border bg-card shadow-sm">
+        <div className="surface overflow-x-auto">
           <table className="w-full min-w-[720px] text-sm">
             <caption className="sr-only">Latest runs ({active.label}), newest first. Open a run to see its full log.</caption>
             <thead className="border-b bg-muted/60 text-left text-xs uppercase tracking-wide text-muted-foreground">

@@ -97,7 +97,7 @@ export function Workspace({ samples, maxChars, initialRunId }: Props) {
   });
 
   return (
-    <div className="grid gap-4 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)_minmax(0,5fr)]">
+    <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)_minmax(0,5fr)]">
       <InputPanel
         scenarios={SCENARIOS}
         activeScenario={scenario?.hotkey ?? null}
@@ -115,7 +115,7 @@ export function Workspace({ samples, maxChars, initialRunId }: Props) {
       />
       <div className="flex flex-col gap-4">
         {state.phase === 'error' && state.error && (
-          <div role="alert" className="flex flex-col gap-2 rounded-xl border border-red-300 bg-red-50 p-3 text-sm text-red-900 shadow-sm">
+          <div role="alert" className="flex flex-col gap-2 rounded-2xl border border-red-300 bg-red-50 p-4 text-sm text-red-900 shadow-sm">
             <p className="flex items-start gap-2">
               <AlertCircle aria-hidden className="mt-0.5 h-4 w-4 shrink-0" />
               {state.error}

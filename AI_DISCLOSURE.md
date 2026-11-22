@@ -31,12 +31,12 @@ All application code, tests, scripts, SQL and docs were written by Claude Code f
 - Read and approved every plan before each slice was built (plan mode), and made every decision asked of me (Supabase project, Vault secret, Vercel access, test-data wipe, prompt logging, Gemini-first switch).
 - Set up the Telegram bot and demo group, all API keys and the Supabase Vault secret myself.
 - To confirm on the phone before submitting (tick when done):
-  - [ ] The digest, `.ics` file and a scheduled reminder arrived in the "DulyNoted Demo" Telegram group.
+  - [ ] The class message (with Google Calendar links) and a scheduled reminder arrived in the "DulyNoted Demo" Telegram group.
   - [ ] Tapping **Add to Google Calendar** in the message opened Google Calendar with the deadline prefilled.
 
 ## What was verified automatically (results read during the build)
 - Telegram Bot API returned `ok: true` for `sendMessage` and `sendDocument` on a real delivery; pg_cron fired the demo reminder on its own (SCHEDULE step in the run log, `docs/s3-reminder.png`).
-- 83 unit tests (`npm test`); the 16-check smoke test (`scripts/smoke.sh`) against localhost and the live Vercel URL; the Playwright demo path (9 screenshots in `docs/demo/`); axe accessibility scans (0 violations); the `FORCE_LLM_FAIL` offline test on a Vercel preview; the workshop run's EXTRACT step showing tier `gemini`; a secret scan of the git history.
+- 88 unit tests (`npm test`); the 16-check smoke test (`scripts/smoke.sh`) against localhost and the live Vercel URL; the Playwright demo path (9 screenshots in `docs/demo/`); axe accessibility scans (0 violations); the `FORCE_LLM_FAIL` offline test on a Vercel preview; the workshop run's EXTRACT step showing tier `gemini`; a secret scan of the git history.
 - Bugs found by these checks and fixed: Next.js data cache hiding new run steps, the Telegram network-error retry path, a model-label bug (`gpt-oss-120b` shown as 20B), a CSS token mismatch from the UI library.
 
 ## Prompts used (verbatim, in order)
@@ -502,4 +502,12 @@ No code changes except docs. Read CLAUDE.md, PIVOT.md, agents/graph.md, lib/llm.
      "What would you build next?" (Google Workspace sign-in, Calendar API, Sheets export, Classroom announcements as an input)
 4. Checks: repo public; default branch `build` (or ask me to merge to main); no secrets in git history: `git log -p | grep -iE "gsk_|AIza|service_role|bot[0-9]+:"` must print nothing (paste the raw result).
 Commit "docs: README, disclosure, submission pack" and push. Stop.
+```
+
+### 20. Telegram + UI polish [14:25 IST]
+```
+Before that make sure you fix:
+[screenshot: Telegram group messages] 1. let the for statement be more specific: For: BE AI&DS A, TE AI&DS A, TE AI&DS B
+2. what is that .ics file... i don't think that's easy to access for a normal user
+[screenshot: dashboard] 3. UI still looks super basic.. make it look like a polished web app
 ```

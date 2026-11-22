@@ -1,5 +1,5 @@
 # DulyNoted
-Paste/upload a college circular → an automatic pipeline extracts actions, deadlines and events, routes them to the affected classes, flags timetable clashes, and after ONE approval click sends a Telegram digest + a .ics file whose alarms remind every student.
+Paste/upload a college circular → an automatic pipeline extracts actions, deadlines and events, routes them to the affected classes, flags timetable clashes, and after ONE approval click sends each class one Telegram message with one-tap Google Calendar links, and schedules a reminder 24 h before each deadline.
 
 ## Clock (IST)
 (filled at kickoff)
@@ -56,7 +56,7 @@ SCOPE FROZEN [13:48 IST] — from now on: fixes, polish and deploy only.
 MUST (by T+2:00):
 1. Hero pipeline on pasted text / sample buttons with a live step-by-step run log + time-saved number. [working output, AI use, UX]
 2. Clash detection against the seeded class calendar, shown as a banner and a yellow run-log step. [usefulness, novelty]
-3. Approve → Telegram digest + .ics (with alarms) + one-tap "Add to Google Calendar" links (lib/gcal.ts) delivered; cache fallback when LLMs fail. [end-to-end automation, demo]
+3. Approve → one Telegram message per class group with one-tap "Add to Google Calendar" links (lib/gcal.ts) — no .ics attachment (user feedback: hard for students); .ics stays an optional Apple/Outlook download in the UI; cache fallback when LLMs fail. [end-to-end automation, demo]
 SHOULD: PDF + image input; scheduled reminder via pg_cron with a "demo reminder in 60 s" button; history page.
 COULD: Marathi digest toggle.
 WON'T: auth, Google OAuth / Calendar API writes (template links only), email, WhatsApp, n8n, multi-college, inline editing of extracted fields, mobile app, local GPU, LangGraph.

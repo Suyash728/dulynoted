@@ -1,6 +1,7 @@
 import type { RunResult } from './types';
-import { escapeHtml } from './telegram';
+import { escapeHtml } from './html';
 import { formatDeadline } from './time';
+import { describeClasses } from './class-names';
 
 /** Pure reminder planning + grouping. Persistence lives in lib/db.ts, sending in the cron route. */
 
@@ -66,6 +67,6 @@ export function groupReminders(due: DueReminder[], chatFor: (label: string) => s
   }
   return Array.from(batches.values(), ({ messages, ...b }) => ({
     ...b,
-    html: [`⏰ <b>DulyNoted reminder</b>`, `<i>For: ${escapeHtml(b.labels.join(', '))}</i>`, '', ...Array.from(messages, (m) => `• ${escapeHtml(m)}`)].join('\n'),
+    html: [`⏰ <b>Reminder</b> — due soon`, `👥 <b>For:</b> ${escapeHtml(describeClasses(b.labels))}`, '', ...Array.from(messages, (m) => `• ${escapeHtml(m)}`)].join('\n'),
   }));
 }

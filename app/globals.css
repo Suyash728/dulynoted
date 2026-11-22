@@ -6,26 +6,26 @@
    All foreground/background pairs meet WCAG AA (≥ 4.5:1). */
 @layer base {
   :root {
-    --background: 40 33% 96%;
-    --foreground: 222 25% 14%;
+    --background: 220 23% 96%;
+    --foreground: 224 30% 12%;
     --card: 0 0% 100%;
-    --card-foreground: 222 25% 14%;
+    --card-foreground: 224 30% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 25% 14%;
-    --primary: 243 55% 45%;
+    --popover-foreground: 224 30% 12%;
+    --primary: 243 75% 52%;
     --primary-foreground: 0 0% 100%;
-    --secondary: 40 20% 92%;
-    --secondary-foreground: 222 25% 14%;
-    --muted: 40 20% 92%;
-    --muted-foreground: 220 10% 38%;
-    --accent: 243 60% 95%;
-    --accent-foreground: 243 55% 35%;
-    --destructive: 0 70% 42%;
+    --secondary: 220 20% 94%;
+    --secondary-foreground: 224 30% 18%;
+    --muted: 220 20% 95%;
+    --muted-foreground: 220 9% 38%;
+    --accent: 243 85% 96%;
+    --accent-foreground: 243 60% 35%;
+    --destructive: 0 72% 42%;
     --destructive-foreground: 0 0% 100%;
-    --border: 35 15% 84%;
-    --input: 35 15% 80%;
-    --ring: 243 55% 45%;
-    --radius: 0.5rem;
+    --border: 220 16% 89%;
+    --input: 220 16% 85%;
+    --ring: 243 75% 52%;
+    --radius: 0.75rem;
   }
 
   * {
@@ -38,6 +38,16 @@
 
   :focus-visible {
     @apply outline-none ring-2 ring-ring ring-offset-2 ring-offset-background;
+  }
+}
+
+@layer components {
+  /* Elevated surface used by every panel. */
+  .surface {
+    @apply rounded-2xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(16,24,40,0.04),0_8px_24px_-12px_rgba(16,24,40,0.12)];
+  }
+  .btn-gradient {
+    @apply bg-gradient-to-r from-indigo-600 to-violet-600 text-white hover:from-indigo-700 hover:to-violet-700;
   }
 }
 

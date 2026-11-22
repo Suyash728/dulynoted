@@ -39,7 +39,7 @@ flowchart LR
   RT --> C[5 · CLASH_CHECK<br/>timetable overlap]
   C --> CO[6 · COMPOSE<br/>Gemini message]
   CO --> G{{7 · APPROVE<br/>one staff click}}
-  G --> D[8 · DELIVER<br/>Telegram + .ics +<br/>Google Calendar links]
+  G --> D[8 · DELIVER<br/>Telegram message +<br/>Google Calendar links]
   D --> S[SCHEDULE<br/>pg_cron reminder<br/>24 h before]
 
   subgraph fallback [LLM fallback chain]
@@ -62,7 +62,7 @@ flowchart LR
 5. **Check timetable** — code checks each event against the affected classes' timetable and raises a clash card.
 6. **Write message** — Gemini writes one short class message; a template takes over if AI is unavailable.
 7. **Approve** — nothing is sent until a staff member clicks once (an atomic DB claim makes double-sends impossible).
-8. **Deliver & remind** — Telegram message + `.ics` (alarms −1 day / −2 h) + Google Calendar links; pg_cron sends a reminder 24 h before each deadline.
+8. **Deliver & remind** — one Telegram message per class group that names exactly who it's for (e.g. *Third-year (TE) AI&DS — Div A & B, 126 students*), with one-tap **Add to Google Calendar** links; pg_cron sends a reminder 24 h before each deadline. An `.ics` download is offered in the app for Apple/Outlook users.
 
 Four of the eight steps are plain deterministic code, and the human approval gate is the fifth non-AI step.
 
@@ -75,7 +75,7 @@ Four of the eight steps are plain deterministic code, and the human approval gat
 - **Gemini rate-limited or down** → Groq `gpt-oss` takes over; the Extract row says why ("fallback after gemini: HTTP 429").
 - **Every LLM down** → the five demo scenarios run from cached fixtures (tier **Cache**); `FORCE_LLM_FAIL=1` proves it (tested on a Vercel preview — [`docs/demo/forcefail-cache.png`](docs/demo/forcefail-cache.png)).
 - **COMPOSE fails** → a template message built only from extracted fields.
-- **Telegram down** → the Deliver step turns amber, the run stays approvable, and **Download .ics** + **Add to Google Calendar** still work.
+- **Telegram down** → the Deliver step turns amber, the run stays approvable, and the **Add to Google Calendar** buttons (plus the Apple / Outlook `.ics`) still work.
 
 ## Engineering quality (Hack2Skill AI review criteria)
 | Criterion | What we did | Evidence |
@@ -83,7 +83,7 @@ Four of the eight steps are plain deterministic code, and the human approval gat
 | **Code quality** | Strict TypeScript, zod at every boundary, one responsibility per file, pure functions for every deterministic step, single LLM gateway | [`lib/`](lib), [`lib/pipeline/`](lib/pipeline), `npm run lint` clean |
 | **Security** | Keys server-only; RLS with no public policies; input size caps + MIME **magic-byte** sniffing; HTML-escaped Telegram text; timing-safe bearer check for the cron route (secret in Supabase Vault); CSP + security headers; no innerHTML for model output | [`lib/file-input.ts`](lib/file-input.ts), [`lib/auth.ts`](lib/auth.ts), [`next.config.mjs`](next.config.mjs) |
 | **Efficiency** | One LLM call per step with per-tier timeouts; step writes don't block the stream; batch inserts; functions pinned to `sin1` next to the database (run 5.3 s → 3.3 s) | [`lib/pipeline/recorder.ts`](lib/pipeline/recorder.ts), [`vercel.json`](vercel.json) |
-| **Testing** | 83 vitest unit tests (dates, routing, clashes, .ics, Telegram, Google Calendar, LLM router + repair, uploads, reminders); 16-check end-to-end smoke test; Playwright demo path; offline-cache mode | [`tests/`](tests), [`scripts/smoke.sh`](scripts/smoke.sh), [`scripts/e2e.mjs`](scripts/e2e.mjs) |
+| **Testing** | 88 vitest unit tests (dates, routing, clashes, class names, .ics, Telegram, Google Calendar, LLM router + repair, uploads, reminders); 16-check end-to-end smoke test; Playwright demo path; offline-cache mode | [`tests/`](tests), [`scripts/smoke.sh`](scripts/smoke.sh), [`scripts/e2e.mjs`](scripts/e2e.mjs) |
 | **Accessibility** | axe WCAG 2 A/AA: 0 violations on both pages; landmarks, labels, `aria-live` run log, keyboard rows and hotkeys, status shown by icon + text, reduced-motion respected, no overflow at 390 px | [`scripts/e2e.mjs`](scripts/e2e.mjs) |
 | **Problem alignment** | Every feature maps to a manual step in the circular workflow (see "The problem") | this README, [`docs/DEMO.md`](docs/DEMO.md) |
 
@@ -111,7 +111,7 @@ Database: run [`supabase/schema.sql`](supabase/schema.sql) then [`supabase/seed.
 
 ```bash
 npm run dev                          # http://localhost:3000
-npm test                             # 83 unit tests
+npm test                             # 88 unit tests
 bash scripts/smoke.sh http://localhost:3000
 CHROMIUM_PATH=/usr/bin/chromium node scripts/e2e.mjs   # browser path + axe a11y
 npm run demo-files                   # re-date the sample PDF/photo for today

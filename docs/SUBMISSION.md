@@ -6,7 +6,7 @@
 Live: https://dulynoted.vercel.app · Repo: https://github.com/Suyash728/dulynoted (branch `build`)
 
 ## Short description (≤ 100 words)
-DulyNoted uses Google Gemini to turn messy college circulars — PDFs, notice-board photos, WhatsApp forwards — into structured deadlines, checklists and audiences. Gemini 3.5 Flash-Lite reads the notice with schema-constrained JSON and vision; deterministic code then resolves exact dates, finds every affected class and flags clashes with their existing timetable. After one staff approval, each class gets a Telegram message, a calendar file with reminders and one-tap Google Calendar links, and pg_cron sends a follow-up reminder a day before the deadline. Every step is visible in a live run log, with automatic fallbacks so it never fails silently.
+DulyNoted uses Google Gemini to turn messy college circulars — PDFs, notice-board photos, WhatsApp forwards — into structured deadlines, checklists and audiences. Gemini 3.5 Flash-Lite reads the notice with schema-constrained JSON and vision; deterministic code then resolves exact dates, finds every affected class and flags clashes with their existing timetable. After one staff approval, each class gets one Telegram message naming exactly which divisions it's for, with one-tap Google Calendar links, and pg_cron sends a follow-up reminder a day before the deadline. Every step is visible in a live run log, with automatic fallbacks so it never fails silently.
 
 ## Tech used
 Google Gemini API (gemini-3.5-flash-lite: structured output + vision) · Google Calendar links · Next.js 14 + TypeScript · Supabase Postgres + pg_cron + Vault · Telegram Bot API · Groq (fallback) · Vercel.
@@ -19,7 +19,7 @@ Formula (shown in the app's tooltip): `manual minutes = 3 (read) + 2 × class gr
 ## AI-tool disclosure
 1. Built 100% from prompts with Claude Code (Anthropic); every prompt is listed verbatim in [AI_DISCLOSURE.md](../AI_DISCLOSURE.md).
 2. Runtime AI: Google Gemini 3.5 Flash-Lite (primary: extraction, message, OCR), Groq gpt-oss (text fallback), cached fixtures (last resort).
-3. Dates, routing, clash detection, calendar files and delivery are deterministic code with 83 unit tests; nothing is sent without a human approval.
+3. Dates, routing, clash detection, calendar links and delivery are deterministic code with 88 unit tests; nothing is sent without a human approval.
 
 ## Demo video script (2:00)
 | Time | Screen action | Voiceover |
@@ -29,7 +29,7 @@ Formula (shown in the app's tooltip): `manual minutes = 3 (read) + 2 × class gr
 | 0:25–0:45 | **Ctrl+Enter**. Run log fills; zoom on **Extract actions & dates — AI · Gemini 3.5 Flash-Lite**, expand it to show the JSON. | "Gemini reads the notice and returns structured JSON against a schema — actions, documents, audience. It copies the date wording; it never invents dates." |
 | 0:45–1:00 | Rows **Resolve exact dates · Find affected classes** go green (Code tags). | "Then plain code takes over: 'tomorrow 5 pm' becomes an exact time, and the audience is matched to the real class list — 3 classes, 184 students." |
 | 1:00–1:15 | **Check class timetable** turns amber; the clash card shows Unit Test 2 vs the workshop. | "And the part nobody catches on paper: the workshop clashes with Unit Test 2 for two divisions. The message warns only those classes." |
-| 1:15–1:35 | Click **Approve & send to 3 classes**; cut to the phone (screen-mirrored): Telegram message arrives; tap **➕ Add to Google Calendar** → Google Calendar opens prefilled. | "One staff click — nothing goes out without it. Every class gets the message, a calendar file with reminders, and one-tap Google Calendar links." |
+| 1:15–1:35 | Click **Approve & send to 3 classes**; cut to the phone (screen-mirrored): Telegram message arrives; tap **➕ Add to Google Calendar** → Google Calendar opens prefilled. | "One staff click — nothing goes out without it. Every class gets one clear message and one-tap Google Calendar links — no files to download." |
 | 1:35–1:50 | Press **5** (phone photo) → run; point at **Read circular — AI · Gemini** (vision) and **6 classes**. | "A phone photo of the notice board works too — Gemini vision reads it, and it reaches all six classes." |
 | 1:50–2:00 | Point at **99% time saved · ≈ 19 min → 3 s**, then open **History**. | "About nineteen minutes of manual work per circular, done in seconds — with a full audit trail. That's DulyNoted." |
 
