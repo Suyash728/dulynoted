@@ -15,12 +15,13 @@ page.on('pageerror', (e) => errors.push(e.message));
 await page.route('**/api/runs/*/approve', (route) => route.continue({ url: `${route.request().url().split('?')[0]}?dryRun=1` }));
 
 await page.goto(base);
-await page.getByRole('button', { name: 'Load sample: Workshop' }).click();
+await page.getByRole('button', { name: /Workshop circular/ }).click();
 let t0 = Date.now();
 await page.getByRole('button', { name: 'Run automation' }).click();
-await page.getByText(/Timetable clash/).waitFor({ timeout: 45_000 });
+await page.getByText(/Timetable clashes? detected/).waitFor({ timeout: 45_000 });
 console.log(`clash banner after ${Date.now() - t0} ms`);
 await page.getByRole('button', { name: /Extract actions & dates/ }).click();
+await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s1.png', fullPage: true });
 
 const axe = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
@@ -29,6 +30,7 @@ t0 = Date.now();
 await page.getByRole('button', { name: /Approve & send/ }).click();
 await page.getByRole('status').filter({ hasText: /Dry run|Delivered/ }).waitFor({ timeout: 30_000 });
 console.log(`delivered (dry run) after ${Date.now() - t0} ms`);
+await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s2.png', fullPage: true });
 const icsHref = await page.getByRole('link', { name: 'Download .ics' }).getAttribute('href');
 const ics = await (await page.request.get(new URL(icsHref, base).toString())).text();
@@ -39,21 +41,24 @@ const violations = [...axe.violations, ...axe2.violations];
 
 // Upload path: the phone-photo sample goes through Gemini OCR and reaches the approval gate.
 t0 = Date.now();
-await page.getByRole('button', { name: 'Sample photo: Scholarship' }).click();
+await page.getByRole('button', { name: /Scholarship · phone photo/ }).click();
 await page.getByText(/Selected: scholarship\.jpg/).waitFor();
 await page.getByRole('button', { name: 'Run automation' }).click();
 await page.getByRole('button', { name: /Approve & send to \d+ classes/ }).waitFor({ timeout: 60_000 });
 console.log(`photo upload → awaiting approval after ${Date.now() - t0} ms`);
+await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s3-upload.png', fullPage: true });
 
 await page.goto(`${base}/history`);
 await page.getByRole('heading', { name: 'Run history' }).waitFor();
 const axeHistory = await new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa']).analyze();
 violations.push(...axeHistory.violations);
+await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s3-history.png' });
 console.log(`history axe violations: ${axeHistory.violations.length}`);
 
 await page.setViewportSize({ width: 390, height: 844 });
+await page.evaluate(() => window.scrollTo(0, 0));
 await page.screenshot({ path: 'docs/s1-mobile.png', fullPage: true });
 const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
 console.log(`mobile horizontal overflow: ${overflow}`);

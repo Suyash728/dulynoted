@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { AlarmClock, AlertTriangle, CalendarPlus, CheckCircle2, Loader2, Send } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import type { ApiEnvelope, RunResult } from '@/lib/types';
 import { formatTime } from '@/lib/time';
@@ -29,6 +30,17 @@ export function ApprovalBar({ run, approving, onApprove, onRefresh }: Props) {
   const fired = reminder ? run.steps.some((s) => s.step === 'SCHEDULE' && new Date(s.at).getTime() >= reminder.since) : false;
   const refreshRef = useRef(onRefresh);
   refreshRef.current = onRefresh;
+
+  // Announce a fresh delivery (not when re-opening an already-delivered run from history).
+  const wasApproving = useRef(false);
+  useEffect(() => {
+    if (approving) wasApproving.current = true;
+    else if (wasApproving.current && deliver) {
+      wasApproving.current = false;
+      if (delivered) toast.success(deliver.status === 'skipped' ? 'Dry run complete' : `Sent to ${classes} classes`, { description: deliver.output });
+      else if (deliver.status === 'warn') toast.warning('Telegram unavailable', { description: 'The .ics file is ready to download. You can retry sending.' });
+    }
+  }, [approving, delivered, deliver, classes]);
 
   // Poll only while a demo reminder is pending; stops on arrival or after 3 minutes.
   useEffect(() => {

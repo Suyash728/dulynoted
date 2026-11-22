@@ -260,19 +260,20 @@ export interface RunSummary {
   students: number;
   manualMin: number | null;
   autoSec: number | null;
+  clashes: number;
 }
 
 /** Latest runs for the history page; reads only summary fields out of the stored result. */
 export async function listRecentRuns(limit = 50): Promise<RunSummary[]> {
   const { data, error } = await db()
     .from('runs')
-    .select('id, created_at, source_name, input_type, status, result->recipients, result->timeSaved')
+    .select('id, created_at, source_name, input_type, status, result->recipients, result->timeSaved, result->clashes')
     .order('created_at', { ascending: false })
     .limit(limit);
   if (error) fail('loading history', error.message);
   type Row = {
     id: string; created_at: string; source_name: string | null; input_type: InputType; status: RunStatus;
-    recipients: { size: number }[] | null; timeSaved: { manualMin: number; autoSec: number } | null;
+    recipients: { size: number }[] | null; timeSaved: { manualMin: number; autoSec: number } | null; clashes: unknown[] | null;
   };
   return (data as unknown as Row[]).map((r) => ({
     id: r.id,
@@ -284,5 +285,6 @@ export async function listRecentRuns(limit = 50): Promise<RunSummary[]> {
     students: (r.recipients ?? []).reduce((s, x) => s + (x.size ?? 0), 0),
     manualMin: r.timeSaved?.manualMin ?? null,
     autoSec: r.timeSaved?.autoSec ?? null,
+    clashes: r.clashes?.length ?? 0,
   }));
 }

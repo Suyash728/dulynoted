@@ -18,18 +18,19 @@ async function step(n, label, action) {
   const t0 = Date.now();
   await action();
   const ms = Date.now() - t0;
+  await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `docs/demo/${n}-${label}.png`, fullPage: n !== 1 });
   console.log(`(${n}) ${label}: ${ms} ms`);
   if (ms > 5000) slow.push(`${n} ${label} (${ms} ms)`);
 }
 
 await step(1, 'open', () => page.goto(base));
-await step(2, 'load-sample', () => page.getByRole('button', { name: 'Load sample: Workshop' }).click());
+await step(2, 'load-sample', () => page.getByRole('button', { name: /Workshop circular/ }).click());
 await step(3, 'run', async () => {
   await page.getByRole('button', { name: 'Run automation' }).click();
   await page.getByText('Extract actions & dates').waitFor();
 });
-await step(4, 'clash', () => page.getByText(/Timetable clash/).waitFor({ timeout: 45_000 }));
+await step(4, 'clash', () => page.getByText(/Timetable clashes? detected/).waitFor({ timeout: 45_000 }));
 await step(5, 'expand-extract', () => page.getByRole('button', { name: /Extract actions & dates/ }).click());
 await step(6, 'approve', () => page.getByRole('button', { name: /Approve & send/ }).click());
 await step(7, 'delivered', () => page.getByRole('status').filter({ hasText: /Delivered to|Dry run/ }).waitFor({ timeout: 30_000 }));
@@ -38,7 +39,7 @@ await step(8, 'download-ics', async () => {
   console.log(`    downloaded ${download.suggestedFilename()}`);
 });
 await step(9, 'history', async () => {
-  await page.getByRole('link', { name: 'History' }).click();
+  await page.getByRole('link', { name: 'History', exact: true }).click();
   await page.getByRole('heading', { name: 'Run history' }).waitFor();
 });
 

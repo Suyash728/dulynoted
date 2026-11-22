@@ -5,7 +5,7 @@ import { ReviewChip } from './ReviewChip';
 
 export function ActionCard({ action }: { action: ActionItem }) {
   return (
-    <li className="rounded-lg border bg-card p-3">
+    <li className="rounded-lg border bg-card p-3 shadow-sm transition-shadow hover:shadow-md">
       <p className="font-semibold">{action.what}</p>
       <dl className="mt-1.5 space-y-1 text-sm">
         {(action.deadline || action.deadlineText) && (
@@ -46,8 +46,8 @@ export function ActionCard({ action }: { action: ActionItem }) {
             {action.requiredDocs.map((doc, i) => (
               <li key={i}>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" className="mt-1 accent-[hsl(var(--primary))]" />
-                  <span>{doc}</span>
+                  <input type="checkbox" className="peer mt-1 h-4 w-4 accent-[hsl(var(--primary))]" />
+                  <span className="transition-colors peer-checked:text-muted-foreground peer-checked:line-through">{doc}</span>
                 </label>
               </li>
             ))}
