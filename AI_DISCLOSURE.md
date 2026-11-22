@@ -88,3 +88,15 @@ done supabase secrects copied into .env.local at / .. Vercel deploy i'll do manu
 ```
 yes create and push on github
 ```
+
+### 6. Deployed + env help [12:45 IST]
+```
+deployed, here's the vercel url: https://dulynoted.vercel.app
+
+and how to get
+
+TELEGRAM_BOT_TOKEN=
+TELEGRAM_DEMO_CHAT_ID=
+CRON_SECRET=
+FORCE_LLM_FAIL=
+```
