@@ -1,11 +1,43 @@
 # AI disclosure
-- Build method: 100% prompt-driven with Claude Code (Anthropic) in the terminal. Every prompt is listed below ("Prompts used"), verbatim and in order.
-- Runtime models (exactly as in lib/llm.ts): **Google Gemini `gemini-3.5-flash-lite`** is the primary engine — structured JSON output for extraction, the class digest, and image OCR. Groq `openai/gpt-oss-120b` / `openai/gpt-oss-20b` are text-only fallbacks; cached fixtures are the last resort.
-- Google tech used: Gemini API (structured output + vision), Google Calendar template links (no OAuth).
-- MCP/tools used while building: Context7 (docs), Supabase MCP (schema, pg_cron), Vercel MCP (preview env test), Playwright (demo test + axe a11y scans), GitHub CLI. UI review suggestions from Google Antigravity (Gemini) — logged verbatim below.
-- What AI generated: (fill at submit)
-- What I verified by hand: (fill at submit)
-- Deterministic (non-AI) parts: date normalisation, audience routing, clash detection, .ics generation, Telegram delivery.
+
+## Build tool
+- **Claude Code** (Anthropic, Claude Opus 5.5) in the terminal. The build was **100% prompt-driven**: every prompt I typed, plus the pre-written playbook prompt it executed, is listed verbatim and in order under [Prompts used](#prompts-used-verbatim-in-order). (A separate PROMPTS.md is not committed; this file is the single source.)
+- Tools/MCP used while building: Context7 (library docs), Supabase MCP (schema, seed, pg_cron, verification queries), Vercel MCP (preview env for the offline-cache test), Playwright + axe-core (demo path and accessibility scans), GitHub CLI.
+- A UI review produced by **Google Antigravity (Gemini)** was used as input for the dashboard redesign; it is logged verbatim under prompt 17, with the suggestions that were rejected and why.
+
+## Runtime models (exactly as implemented in `lib/llm.ts`)
+- **Primary: Google Gemini `gemini-3.5-flash-lite`** via the OpenAI-compatible endpoint — schema-constrained JSON (`response_format: json_schema`) for extraction, the class message, and vision OCR for photos/scanned PDFs.
+- **Fallback (text only): Groq** `openai/gpt-oss-120b` (extraction) and `openai/gpt-oss-20b` (message), `json_object` mode.
+- **Last resort:** cached fixtures for the five demo scenarios (`seed/fixtures/`), labelled "Cache" in the run log.
+- Every model reply is validated with zod; one repair call is allowed with the validation error.
+
+## Google tech used
+- Gemini API: structured output + vision (EXTRACT, COMPOSE, image INGEST).
+- Google Calendar template links (`lib/gcal.ts`): one-tap "Add to Google Calendar" in the UI and in every Telegram message. No OAuth, no Calendar API writes.
+
+## Deterministic (non-AI) parts
+Date normalisation (chrono-node, IST), audience routing, timetable clash detection, digest grouping, time-saved estimate, `.ics` generation, Google Calendar links, Telegram delivery, approval locking, reminder scheduling (pg_cron) — all plain code with unit tests.
+
+## What AI generated
+All application code, tests, scripts, SQL and docs were written by Claude Code from the prompts below — in order of the git history:
+- Scaffold, data contracts (`lib/types.ts`), Supabase schema/seed, sample circulars (playbook P1).
+- Slice 1: LLM router, pipeline steps, NDJSON streaming API, 3-pane UI, run log (P2).
+- Slice 2: approval gate, Telegram + `.ics` delivery, offline cache fixtures (P3).
+- Slice 3: PDF/photo input, scheduled reminders with pg_cron, history page (P4).
+- Polish: "How it works", region pinning for speed, demo scripts, DEMO.md (P5); dashboard redesign (prompt 17); Gemini-first router + Google Calendar links (P5b); this README, disclosure and submission pack (P6).
+- The circular texts in `seed/circulars/` and the class/timetable seed data were written in the playbook (by me, with AI help) as realistic demo data — they are not real college notices.
+
+## What I verified by hand
+- Read and approved every plan before each slice was built (plan mode), and made every decision asked of me (Supabase project, Vault secret, Vercel access, test-data wipe, prompt logging, Gemini-first switch).
+- Set up the Telegram bot and demo group, all API keys and the Supabase Vault secret myself.
+- To confirm on the phone before submitting (tick when done):
+  - [ ] The digest, `.ics` file and a scheduled reminder arrived in the "DulyNoted Demo" Telegram group.
+  - [ ] Tapping **Add to Google Calendar** in the message opened Google Calendar with the deadline prefilled.
+
+## What was verified automatically (results read during the build)
+- Telegram Bot API returned `ok: true` for `sendMessage` and `sendDocument` on a real delivery; pg_cron fired the demo reminder on its own (SCHEDULE step in the run log, `docs/s3-reminder.png`).
+- 83 unit tests (`npm test`); the 16-check smoke test (`scripts/smoke.sh`) against localhost and the live Vercel URL; the Playwright demo path (9 screenshots in `docs/demo/`); axe accessibility scans (0 violations); the `FORCE_LLM_FAIL` offline test on a Vercel preview; the workshop run's EXTRACT step showing tier `gemini`; a secret scan of the git history.
+- Bugs found by these checks and fixed: Next.js data cache hiding new run steps, the Telegram network-error retry path, a model-label bug (`gpt-oss-120b` shown as 20B), a CSS token mismatch from the UI library.
 
 ## Prompts used (verbatim, in order)
 The build follows a pre-written playbook of numbered prompts (P0–P8). Below: each message I typed to Claude Code, then the playbook prompt it executed.
@@ -431,4 +463,43 @@ DONE ONLY WHEN
 [ ] a dry-run approve payload contains "calendar.google.com/calendar/render"
 [ ] redeployed; smoke.sh PASS on the Vercel URL (paste raw output)
 Commit "feat: Gemini as primary engine, Google Calendar links" and stop. Then re-run the P5 demo-tester click path once and replace the screenshots in docs/demo/.
+```
+
+### 19. go P6 [14:18 IST]
+```
+go P6, link judges to AI_DISCLOSURE.md
+```
+Executed prompt P6 (updated playbook), with PROMPTS.md references pointed at this file per the instruction above:
+```
+Append this prompt verbatim to PROMPTS.md under "## P6 Submit pack [HH:MM IST]".
+No code changes except docs. Read CLAUDE.md, PIVOT.md, agents/graph.md, lib/llm.ts, PROMPTS.md, docs/DEMO.md. Describe the model setup exactly as lib/llm.ts implements it; do not claim anything that isn't in the code. This is a Google for Developers–sponsored event, so make the Gemini/Google usage easy for judges to find.
+
+1. README.md:
+   - one-line pitch; a "Built with Google Gemini" line under the title; live URL; 3 screenshots from docs/demo
+   - "Where Google tech is used" table: step | Google tech | what it does (e.g. EXTRACT | Gemini 3.5 Flash-Lite, structured JSON output | turns a messy circular into deadlines/audience/events; COMPOSE | Gemini | class digest; image INGEST | Gemini vision, if implemented; DELIVER | Google Calendar links | one-tap add for every deadline)
+   - Mermaid flowchart of the 8 steps: mark Gemini steps vs deterministic steps, the approval gate, and the fallback chain Gemini → Groq → cache
+   - How it works (8 bullets); setup (git clone, npm i, env var NAMES only with GEMINI_API_KEY first, supabase/schema.sql + seed.sql, npm run dev)
+   - rubric-alignment table (INFERRED criteria: problem fit & usefulness | working end-to-end | quality of prompting & AI use | use of Google tech | UX & clarity | creativity | demo), each with the exact screen/file that proves it
+   - Fallbacks section (Groq fallback, cache tier, FORCE_LLM_FAIL, Telegram down → .ics download + Google Calendar links still work)
+   - links to AI_DISCLOSURE.md and PROMPTS.md
+2. AI_DISCLOSURE.md: build tool (Claude Code, prompt-only, PROMPTS.md); runtime models exactly as in lib/llm.ts (Gemini primary, Groq fallback); Google tech used; "What AI generated" and "What I verified by hand", filled in from git log + PROMPTS.md (verified = smoke tests, Playwright demo run, real Telegram send, Google Calendar link opened).
+3. docs/SUBMISSION.md:
+   - Project name + tagline
+   - Short description ≤ 100 words; mention Gemini in the first two sentences
+   - Tech used (one line, Google tech first)
+   - The impact number: "≈ X min of manual work per circular → Y s", with the formula
+   - AI-tool disclosure (3 lines)
+   - Demo video script: 2-column table (screen action | voiceover), timed to the required length (default 2 min); show the Gemini tier badge in the run log and the Google Calendar tap on the phone
+   - Judge Q&A: the 9 hardest questions with 2-sentence answers:
+     "Isn't this just an LLM wrapper?" (4 of 8 steps are deterministic; the clash check uses the real timetable)
+     "Why Gemini, and how exactly is it used?" (structured output against a schema; vision if implemented; Flash-Lite keeps a whole college inside the free tier)
+     "What if the model invents a date?" (copy-the-original-wording rule + chrono-node + needs-review chips + human approval gate)
+     "What happens if Gemini is down or rate-limited?" (Groq fallback, then cached results; shown live in the run log)
+     "Why Telegram and not WhatsApp?" (free bot API with no business verification; the WhatsApp Cloud API can replace lib/telegram.ts directly)
+     "Why Google Calendar links instead of the Calendar API?" (zero OAuth for students; the API is next once there's college SSO)
+     "How does it scale to a whole college?"
+     "Privacy?"
+     "What would you build next?" (Google Workspace sign-in, Calendar API, Sheets export, Classroom announcements as an input)
+4. Checks: repo public; default branch `build` (or ask me to merge to main); no secrets in git history: `git log -p | grep -iE "gsk_|AIza|service_role|bot[0-9]+:"` must print nothing (paste the raw result).
+Commit "docs: README, disclosure, submission pack" and push. Stop.
 ```
