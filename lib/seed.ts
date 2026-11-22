@@ -17,8 +17,8 @@ export async function loadSampleText(id: SampleId): Promise<{ label: string; tex
   return { label: sample.label, text: renderDateTokens(raw) };
 }
 
-const fixtureSchema = z.object({ extraction: extractionSchema, digest: z.string().min(1) });
-export type Fixture = { extraction: Extraction; digest: string };
+export const fixtureSchema = z.object({ extraction: extractionSchema });
+export type Fixture = { extraction: Extraction };
 
 /** Cached model output for a known sample; null when none exists. Dates are stored as {{D+n}} tokens. */
 export async function loadFixture(id: SampleId): Promise<Fixture | null> {

@@ -4,7 +4,7 @@ import { useCallback, useRef, useState } from 'react';
 import type { ApiEnvelope, RunResult, RunStep, StreamEvent } from '@/lib/types';
 import { parseNdjsonChunk, upsertStep } from '@/lib/ndjson';
 
-export type RunPhase = 'idle' | 'running' | 'done' | 'error';
+export type RunPhase = 'idle' | 'running' | 'approving' | 'done' | 'error';
 
 export interface RunState {
   phase: RunPhase;
@@ -15,7 +15,7 @@ export interface RunState {
 
 const INITIAL: RunState = { phase: 'idle', steps: [], run: null, error: null };
 
-/** Streams POST /api/runs and folds StreamEvents into UI state. */
+/** Streams the pipeline (POST /api/runs) and the approval (POST /api/runs/:id/approve) into one run log. */
 export function useRunStream() {
   const [state, setState] = useState<RunState>(INITIAL);
   const abortRef = useRef<AbortController | null>(null);
@@ -28,15 +28,15 @@ export function useRunStream() {
     });
   }, []);
 
-  const start = useCallback(
-    async (body: FormData) => {
+  const stream = useCallback(
+    async (url: string, init: RequestInit, phase: 'running' | 'approving') => {
       abortRef.current?.abort();
       const controller = new AbortController();
       abortRef.current = controller;
-      setState({ ...INITIAL, phase: 'running' });
+      setState((s) => (phase === 'running' ? { ...INITIAL, phase } : { ...s, phase, error: null }));
 
       try {
-        const res = await fetch('/api/runs', { method: 'POST', body, signal: controller.signal });
+        const res = await fetch(url, { ...init, signal: controller.signal });
         if (!res.ok || !res.body) {
           const env = (await res.json().catch(() => null)) as ApiEnvelope<never> | null;
           throw new Error(env?.error ?? `Request failed (${res.status})`);
@@ -61,10 +61,13 @@ export function useRunStream() {
     [apply],
   );
 
-  const reset = useCallback(() => {
-    abortRef.current?.abort();
-    setState(INITIAL);
-  }, []);
+  const start = useCallback((body: FormData) => stream('/api/runs', { method: 'POST', body }, 'running'), [stream]);
 
-  return { state, start, reset };
+  const approve = useCallback(
+    (runId: string, dryRun = false) =>
+      stream(`/api/runs/${encodeURIComponent(runId)}/approve${dryRun ? '?dryRun=1' : ''}`, { method: 'POST' }, 'approving'),
+    [stream],
+  );
+
+  return { state, start, approve };
 }

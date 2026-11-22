@@ -48,3 +48,14 @@ describe('input validation', () => {
     expect(r.actions).toEqual([]);
   });
 });
+
+describe('tokenizeDates', () => {
+  it('round-trips with renderDateTokens', async () => {
+    const { tokenizeDates } = await import('@/lib/samples');
+    const today = { year: 2026, month: 11, day: 22 };
+    const text = 'issued 2026-11-22, due 27/11/2026, late till 01/12/2026, was 20/11/2026';
+    const tokens = tokenizeDates(text, today);
+    expect(tokens).toBe('issued {{ISO:D+0}}, due {{D+5}}, late till {{D+9}}, was {{D-2}}');
+    expect(renderDateTokens(tokens, today)).toBe(text);
+  });
+});

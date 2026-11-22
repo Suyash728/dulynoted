@@ -1,0 +1,70 @@
+{
+  "extraction": {
+    "title": "2-Day Hands-on Workshop on Building GenAI Agents",
+    "issuer": "HOD, AI&DS",
+    "issuedOn": "{{ISO:D+0}}",
+    "summary": "A mandatory two‑day hands‑on workshop on building GenAI agents for TE AI&DS students, with optional attendance for BE AI&DS students.",
+    "audience": {
+      "all": false,
+      "years": [
+        "TE",
+        "BE"
+      ],
+      "branches": [
+        "AI&DS"
+      ],
+      "divisions": [
+        "A",
+        "B"
+      ]
+    },
+    "actions": [
+      {
+        "what": "Register using the google form",
+        "deadline": null,
+        "deadlineText": "tomorrow 5 pm",
+        "location": null,
+        "requiredDocs": [],
+        "fee": null,
+        "needsReview": false
+      },
+      {
+        "what": "Bring laptop with charger",
+        "deadline": null,
+        "deadlineText": "",
+        "location": null,
+        "requiredDocs": [],
+        "fee": null,
+        "needsReview": false
+      },
+      {
+        "what": "Inform class teacher if having any other academic commitment",
+        "deadline": null,
+        "deadlineText": "",
+        "location": null,
+        "requiredDocs": [],
+        "fee": null,
+        "needsReview": false
+      }
+    ],
+    "events": [
+      {
+        "title": "2-Day Hands-on Workshop on Building GenAI Agents",
+        "start": null,
+        "end": null,
+        "dateText": "{{D+2}} 10 AM to 4 PM",
+        "venue": "Seminar Hall-2 (2nd floor)",
+        "needsReview": false
+      },
+      {
+        "title": "2-Day Hands-on Workshop on Building GenAI Agents",
+        "start": null,
+        "end": null,
+        "dateText": "{{D+3}} 10 AM to 4 PM",
+        "venue": "Seminar Hall-2 (2nd floor)",
+        "needsReview": false
+      }
+    ],
+    "language": "en"
+  }
+}

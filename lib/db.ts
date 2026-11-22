@@ -141,3 +141,56 @@ export async function listCalendarEvents(labels: string[], fromIso: string, toIs
   if (error) fail('loading the timetable', error.message);
   return data as CalendarRow[];
 }
+
+/**
+ * Atomically moves a run from 'awaiting_approval' to 'running'. Returns false when the run
+ * is missing or already approved, so a double click can never send twice.
+ */
+export async function claimForApproval(id: string): Promise<boolean> {
+  const { data, error } = await db()
+    .from('runs')
+    .update({ status: 'running' })
+    .eq('id', id)
+    .eq('status', 'awaiting_approval')
+    .select('id');
+  if (error) fail('claiming the run for approval', error.message);
+  return (data ?? []).length === 1;
+}
+
+export async function getRunStatus(id: string): Promise<RunStatus | null> {
+  const { data, error } = await db().from('runs').select('status').eq('id', id).maybeSingle<{ status: RunStatus }>();
+  if (error) fail('loading the run status', error.message);
+  return data?.status ?? null;
+}
+
+export async function setRunStatus(id: string, status: RunStatus): Promise<void> {
+  const { error } = await db().from('runs').update({ status }).eq('id', id);
+  if (error) fail('updating the run status', error.message);
+}
+
+export async function maxStepSeq(id: string): Promise<number> {
+  const { data, error } = await db()
+    .from('run_steps')
+    .select('seq')
+    .eq('run_id', id)
+    .order('seq', { ascending: false })
+    .limit(1)
+    .maybeSingle<{ seq: number }>();
+  if (error) fail('loading run steps', error.message);
+  return data?.seq ?? 0;
+}
+
+export interface DeliveryRow {
+  run_id: string;
+  audience_label: string;
+  channel: 'telegram';
+  status: 'sent' | 'failed' | 'skipped';
+  payload: Record<string, unknown>;
+}
+
+/** One batch insert for all deliveries of a run. */
+export async function insertDeliveries(rows: DeliveryRow[]): Promise<void> {
+  if (rows.length === 0) return;
+  const { error } = await db().from('deliveries').insert(rows);
+  if (error) fail('saving deliveries', error.message);
+}

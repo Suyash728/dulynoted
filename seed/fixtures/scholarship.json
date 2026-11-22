@@ -1,0 +1,47 @@
+{
+  "extraction": {
+    "title": "Scholarship / Freeship 2026-27",
+    "issuer": "Office of the Registrar",
+    "issuedOn": "{{ISO:D+0}}",
+    "summary": "Students must submit hard copies of their scholarship application with required documents by {{D+7}}, 4 pm.",
+    "audience": {
+      "all": true,
+      "years": [
+        "FE",
+        "SE",
+        "TE",
+        "BE"
+      ],
+      "branches": [],
+      "divisions": []
+    },
+    "actions": [
+      {
+        "what": "Submit hard copy of scholarship application with income certificate, last year marksheet, and Aadhaar‑seeded bank passbook copy",
+        "deadline": null,
+        "deadlineText": "on or before {{D+7}}, 4 pm",
+        "location": "Scholarship Section, Office Window No. 3",
+        "requiredDocs": [
+          "Income certificate",
+          "Last year marksheet",
+          "Aadhaar‑seeded bank passbook copy"
+        ],
+        "fee": null,
+        "needsReview": false
+      },
+      {
+        "what": "Attach previous year's sanction letter (for renewal students)",
+        "deadline": null,
+        "deadlineText": "",
+        "location": "Scholarship Section, Office Window No. 3",
+        "requiredDocs": [
+          "Previous year's sanction letter"
+        ],
+        "fee": null,
+        "needsReview": false
+      }
+    ],
+    "events": [],
+    "language": "en"
+  }
+}

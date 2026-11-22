@@ -1,7 +1,7 @@
 import { runPipeline } from '@/lib/pipeline/run';
 import { runInputSchema } from '@/lib/schemas';
 import { fail } from '@/lib/api';
-import type { StreamEvent } from '@/lib/types';
+import { ndjsonResponse } from '@/lib/ndjson-response';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -32,26 +32,5 @@ export async function POST(request: Request): Promise<Response> {
   });
   if (!parsed.success) return fail(parsed.error.issues[0]?.message ?? 'Invalid input', 400);
 
-  const encoder = new TextEncoder();
-  const stream = new ReadableStream<Uint8Array>({
-    async start(controller) {
-      const send = (ev: StreamEvent) => controller.enqueue(encoder.encode(`${JSON.stringify(ev)}\n`));
-      try {
-        for await (const ev of runPipeline(parsed.data)) send(ev);
-      } catch (err) {
-        console.error('[api/runs] pipeline crashed:', err instanceof Error ? err.message : 'unknown');
-        send({ type: 'error', error: 'The run failed unexpectedly. Please retry.' });
-      } finally {
-        controller.close();
-      }
-    },
-  });
-
-  return new Response(stream, {
-    headers: {
-      'Content-Type': 'application/x-ndjson; charset=utf-8',
-      'Cache-Control': 'no-store',
-      'X-Accel-Buffering': 'no',
-    },
-  });
+  return ndjsonResponse(runPipeline(parsed.data), 'api/runs');
 }

@@ -1,9 +1,10 @@
 import 'server-only';
-import type { Clash, Extraction, Recipient, RunResult, RunStep, StepName, StepStatus, StreamEvent, Tier } from '../types';
+import type { Clash, Extraction, Recipient, RunResult, StreamEvent } from '../types';
 import type { RepairInfo } from '../llm';
 import { LlmUnavailableError } from '../llm';
 import type { RunInput } from '../schemas';
-import { createRun, finishRun, insertStep, listAudiences, listCalendarEvents } from '../db';
+import { createRun, finishRun, listAudiences, listCalendarEvents } from '../db';
+import { Recorder, StepError } from './recorder';
 import { loadFixture, loadSampleText, type Fixture } from '../seed';
 import { cleanText, describeText } from './ingest';
 import { describeAudience, extractCirculars, summarizeExtraction } from './extract';
@@ -18,80 +19,6 @@ import { formatTime } from '../time';
  * Sequential pipeline INGEST → EXTRACT (→ REPAIR) → NORMALIZE_DATES → ROUTE_AUDIENCE → CLASH_CHECK → COMPOSE.
  * Yields StreamEvents for the live run log and persists every finished step. Ends 'awaiting_approval'.
  */
-
-interface StepOutcome<T> {
-  status: Exclude<StepStatus, 'running'>;
-  output: string;
-  value: T;
-  detail?: unknown;
-  tier?: Tier;
-  model?: string;
-}
-
-/** A step failure the user should read verbatim. */
-class StepError extends Error {}
-
-class Recorder {
-  private seq = 0;
-  private pending: Promise<void>[] = [];
-  readonly steps: RunStep[] = [];
-
-  constructor(readonly runId: string) {}
-
-  private make(step: StepName, status: StepStatus, input: string, extra: Partial<RunStep> = {}): RunStep {
-    return { runId: this.runId, seq: this.seq, step, status, input, output: '', at: new Date().toISOString(), ...extra };
-  }
-
-  /** Persist without blocking the stream; flushed once before the run finishes. */
-  private save(step: RunStep) {
-    this.steps.push(step);
-    this.pending.push(insertStep(step));
-  }
-
-  async *run<T>(name: StepName, input: string, fn: () => Promise<StepOutcome<T>>): AsyncGenerator<StreamEvent, T> {
-    this.seq += 1;
-    const started = Date.now();
-    yield { type: 'step', step: this.make(name, 'running', input) };
-    try {
-      const out = await fn();
-      const step = this.make(name, out.status, input, {
-        output: out.output,
-        detail: out.detail,
-        tier: out.tier,
-        model: out.model,
-        ms: Date.now() - started,
-      });
-      this.save(step);
-      yield { type: 'step', step };
-      return out.value;
-    } catch (err) {
-      const message = err instanceof StepError ? err.message : `${name} failed unexpectedly — please retry or load a sample.`;
-      const step = this.make(name, 'error', input, {
-        output: message,
-        detail: err instanceof LlmUnavailableError ? { attempts: err.attempts } : undefined,
-        ms: Date.now() - started,
-      });
-      this.save(step);
-      yield { type: 'step', step };
-      throw new StepError(message);
-    }
-  }
-
-  /** A step that already happened inside another one (REPAIR). */
-  *note(name: StepName, status: Exclude<StepStatus, 'running'>, input: string, output: string, extra: Partial<RunStep>): Generator<StreamEvent> {
-    this.seq += 1;
-    const step = this.make(name, status, input, { output, ...extra });
-    this.save(step);
-    yield { type: 'step', step };
-  }
-
-  async flush(): Promise<void> {
-    const results = await Promise.allSettled(this.pending);
-    this.pending = [];
-    const failed = results.find((r): r is PromiseRejectedResult => r.status === 'rejected');
-    if (failed) console.error('[run] step persistence failed:', failed.reason instanceof Error ? failed.reason.message : 'unknown');
-  }
-}
 
 export async function* runPipeline(input: RunInput, now: Date = new Date()): AsyncGenerator<StreamEvent> {
   const started = Date.now();
@@ -202,7 +129,7 @@ export async function* runPipeline(input: RunInput, now: Date = new Date()): Asy
 
     // 6 COMPOSE
     const base = yield* rec.run('COMPOSE', `${labels.length} class groups`, async () => {
-      const c = await composeDigest(extraction, (await fixture)?.digest ?? null, now);
+      const c = await composeDigest(extraction, (await fixture) !== null, now);
       return {
         status: c.usedFallback ? 'warn' : 'ok',
         output: c.usedFallback ? `AI unavailable — template digest (${c.text.length} chars)` : `Digest ready (${c.text.length} chars)`,

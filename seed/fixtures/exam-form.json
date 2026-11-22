@@ -1,0 +1,57 @@
+{
+  "extraction": {
+    "title": "Exam Form Submission for Sem-V",
+    "issuer": "Exam Controller",
+    "issuedOn": "{{ISO:D+0}}",
+    "summary": "T.E. students must fill the online exam form and submit the printout with required documents to the Exam Cell.",
+    "audience": {
+      "all": false,
+      "years": [
+        "TE"
+      ],
+      "branches": [
+        "AI&DS",
+        "Comp",
+        "IT"
+      ],
+      "divisions": []
+    },
+    "actions": [
+      {
+        "what": "Fill the online EXAM FORM for Sem-V on the MU portal",
+        "deadline": null,
+        "deadlineText": "on or before {{D+5}}",
+        "location": "MU portal",
+        "requiredDocs": [],
+        "fee": null,
+        "needsReview": false
+      },
+      {
+        "what": "Submit the printout of the filled form with required documents to the Exam Cell",
+        "deadline": null,
+        "deadlineText": "",
+        "location": "Exam Cell (Room 104) betn 10.30 am to 1.00 pm on working days",
+        "requiredDocs": [
+          "fee receipt (original + xerox)",
+          "copy of Sem IV marksheet",
+          "2 passport size photos"
+        ],
+        "fee": null,
+        "needsReview": false
+      },
+      {
+        "what": "Pay late fee of Rs. 500/- if form submitted after {{D+5}}",
+        "deadline": null,
+        "deadlineText": "upto {{D+9}}",
+        "location": null,
+        "requiredDocs": [
+          "fee receipt"
+        ],
+        "fee": "Rs. 500/-",
+        "needsReview": false
+      }
+    ],
+    "events": [],
+    "language": "en"
+  }
+}

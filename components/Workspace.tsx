@@ -12,8 +12,9 @@ import type { SampleId } from '@/lib/samples';
 export function Workspace({ samples, maxChars }: { samples: SampleText[]; maxChars: number }) {
   const [text, setText] = useState('');
   const [activeSample, setActiveSample] = useState<SampleId | null>(null);
-  const { state, start } = useRunStream();
+  const { state, start, approve } = useRunStream();
   const running = state.phase === 'running';
+  const approving = state.phase === 'approving';
 
   const loadSample = (id: SampleId) => {
     const s = samples.find((x) => x.id === id);
@@ -42,7 +43,7 @@ export function Workspace({ samples, maxChars }: { samples: SampleText[]; maxCha
         samples={samples}
         text={text}
         maxChars={maxChars}
-        running={running}
+        running={running || approving}
         activeSample={activeSample}
         onTextChange={editText}
         onLoadSample={loadSample}
@@ -65,9 +66,14 @@ export function Workspace({ samples, maxChars }: { samples: SampleText[]; maxCha
             </div>
           </div>
         )}
-        <ResultPanel run={state.run} running={running} />
+        <ResultPanel
+          run={state.run}
+          running={running}
+          approving={approving}
+          onApprove={() => state.run && void approve(state.run.id)}
+        />
       </div>
-      <RunLog steps={state.steps} active={running} />
+      <RunLog steps={state.steps} active={running} approving={approving} />
     </div>
   );
 }

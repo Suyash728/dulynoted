@@ -89,9 +89,12 @@ function StepRow({ step }: { step: RunStep }) {
   );
 }
 
-export function RunLog({ steps, active }: { steps: RunStep[]; active: boolean }) {
+const APPROVAL: StepName[] = ['APPROVE', 'DELIVER'];
+
+export function RunLog({ steps, active, approving }: { steps: RunStep[]; active: boolean; approving: boolean }) {
   const seen = new Set(steps.map((s) => s.step));
-  const waiting = active || steps.length > 0 ? PLANNED.filter((p) => !seen.has(p)) : [];
+  const planned = approving || seen.has('APPROVE') ? [...PLANNED, ...APPROVAL] : PLANNED;
+  const waiting = active || approving || steps.length > 0 ? planned.filter((p) => !seen.has(p)) : [];
   const finished = steps.filter((s) => s.status !== 'running').length;
 
   return (
@@ -103,7 +106,7 @@ export function RunLog({ steps, active }: { steps: RunStep[]; active: boolean })
         <span className="text-xs text-muted-foreground">{steps.length ? `${finished} steps done` : 'idle'}</span>
       </header>
       <div className="font-mono text-sm">
-        {steps.length === 0 && !active ? (
+        {steps.length === 0 && !active && !approving ? (
           <p className="px-3 py-6 text-xs text-muted-foreground">Every pipeline step appears here live — click any row to see exactly what went in and came out.</p>
         ) : (
           <ol aria-live="polite" aria-relevant="additions text" className="list-none">

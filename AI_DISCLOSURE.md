@@ -161,3 +161,33 @@ Then list files changed, commit "feat(s1): hero pipeline with live run log and c
 ```
 vercel will redeploy automatically on push to main branch (or pr)
 ```
+
+### 13. go P3 [13:14 IST]
+```
+go P3
+```
+Executed playbook prompt P3 (plus the Evaluation rules in CLAUDE.md):
+```
+Append this prompt verbatim to PROMPTS.md under "## P3 Slice 2 [HH:MM IST]".
+Enter Plan Mode. Read CLAUDE.md, lib/types.ts, agents/graph.md. Use Context7 for `ics` (createEvents + alarms) and the Telegram Bot API (sendMessage HTML, sendDocument multipart) if unsure.
+
+Build Slice 2: "Click 'Approve & send' → DELIVER step runs → the Telegram group receives the digest and a .ics file; tapping the .ics adds deadlines with reminders to the phone calendar. Works even when every LLM is down."
+
+IN SCOPE
+- lib/ics.ts: build a calendar from RunResult per agents/graph.md (alarms −1 day and −2 h for deadlines, −1 h for events, TZ Asia/Kolkata).
+- app/api/runs/[id]/ics/route.ts: GET → text/calendar, filename dulynoted-<shortid>.ics. Add a "Download .ics" button on the result panel (works before approval).
+- lib/telegram.ts: sendMessage (HTML parse_mode, escape user text) and sendDocument. chatId = audiences.telegram_chat_id ?? TELEGRAM_DEMO_CHAT_ID. Group recipients by chatId → one message per chat: header "📌 DulyNoted · <title>", "For: <labels>", digest, clash line for affected labels only, footer "Calendar file attached ⤵".
+- lib/pipeline/deliver.ts + app/api/runs/[id]/approve/route.ts: POST → NDJSON stream; emits APPROVE (ok, "approved by staff at HH:MM") then DELIVER; inserts deliveries rows; run status 'delivered'. ?dryRun=1 skips the Telegram call and marks DELIVER 'skipped'. Missing token or Telegram error → DELIVER 'warn' with "Telegram unavailable — .ics ready to download", never a crash.
+- UI: enable "Approve & send to N classes"; after delivery show a green "Delivered to N classes · 1 message · 1 calendar file" row with timestamps; the RunLog continues the same run (steps 7–8 appended).
+- Offline cache: run each of the 3 samples once with live LLMs, save the Extraction + base digest to seed/fixtures/<sampleId>.json with concrete dates replaced by {{D+n}} tokens (relative to the issue date) so they stay valid on any day. lib/llm.ts cache tier loads and renders them. FORCE_LLM_FAIL=1 makes groq+gemini throw immediately so the cache path is testable.
+- smoke.sh: add (a) GET /api/runs/<id>/ics contains BEGIN:VCALENDAR and VALARM, (b) approve with ?dryRun=1 ends with status delivered, (c) with FORCE_LLM_FAIL=1 on a local server the workshop sample still completes and EXTRACT shows tier cache.
+
+OUT OF SCOPE: scheduled reminders, PDF/image, history, auth, editing extracted data.
+
+DONE ONLY WHEN
+[ ] `npm run build` passes
+[ ] smoke.sh all PASS locally, including the FORCE_LLM_FAIL run (paste raw output)
+[ ] One real approve (not dry run) on the workshop sample → Telegram API returns ok:true for both calls (paste the two JSON `ok` fields only)
+[ ] Redeploy; smoke.sh PASS against Vercel (paste raw output)
+Then list files changed, commit "feat(s2): approval gate, Telegram + .ics delivery, offline cache", and stop.
+```

@@ -35,7 +35,11 @@ function facts(x: Extraction, now: Date): string {
   });
 }
 
-export async function composeDigest(x: Extraction, cachedDigest: string | null, now: Date = new Date()): Promise<ComposeResult> {
+/**
+ * `cacheable` (known samples): when every live tier fails, the template digest is served as the
+ * cache tier so the offline demo is labelled honestly and its dates are always correct for today.
+ */
+export async function composeDigest(x: Extraction, cacheable: boolean, now: Date = new Date()): Promise<ComposeResult> {
   const started = Date.now();
   try {
     const res = await chat({
@@ -45,7 +49,7 @@ export async function composeDigest(x: Extraction, cachedDigest: string | null, 
         { role: 'system', content: SYSTEM },
         { role: 'user', content: facts(x, now) },
       ],
-      cache: async () => (cachedDigest ? { digest: cachedDigest } : null),
+      cache: cacheable ? async () => ({ digest: templateDigest(x, now) }) : undefined,
     });
     return { text: clip(res.data.digest), tier: res.tier, model: res.model, ms: res.ms, usedFallback: false };
   } catch {

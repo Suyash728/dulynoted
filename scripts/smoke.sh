@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # End-to-end smoke test against a running DulyNoted (local or Vercel).
 # Usage: bash scripts/smoke.sh <BASE_URL>
+#   SMOKE_EXPECT_CACHE=1  → server runs with FORCE_LLM_FAIL=1; assert the offline cache path instead.
 set -u
 BASE="${1:-http://localhost:3000}"
 BASE="${BASE%/}"
@@ -39,6 +40,17 @@ envelope() {
 
 echo "Smoke test → $BASE"
 
+if [ "${SMOKE_EXPECT_CACHE:-}" = "1" ]; then
+  C=$(run workshop)
+  check "cache mode: workshop completes with status awaiting_approval" "$(echo "$C" | judge 'R && R.status === "awaiting_approval"')"
+  check "cache mode: EXTRACT tier is cache" "$(echo "$C" | judge 'step("EXTRACT")?.tier === "cache"')"
+  check "cache mode: CLASH_CHECK still warns" "$(echo "$C" | judge 'step("CLASH_CHECK")?.status === "warn"')"
+  echo "---"
+  echo "$PASS passed, $FAIL failed"
+  [ "$FAIL" -eq 0 ]
+  exit $?
+fi
+
 code=$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "$BASE/")
 check "GET / returns 200" "$([ "$code" = 200 ] && echo true || echo false)" "HTTP $code"
 
@@ -57,6 +69,16 @@ check "GET /api/runs/:id returns the run with ≥ 6 steps" "$(echo "$G" | envelo
 
 B=$(curl -s --max-time 20 -X POST "$BASE/api/runs" -F inputType=text -F sampleId=../../etc/passwd)
 check "rejects an invalid sampleId with an error envelope" "$(echo "$B" | envelope 'J.success === false && Boolean(J.error)')"
+
+
+ICS=$(curl -s --max-time 20 "$BASE/api/runs/$RID/ics")
+check "GET /api/runs/:id/ics is a calendar with alarms" "$(echo "$ICS" | grep -q BEGIN:VCALENDAR && echo "$ICS" | grep -q BEGIN:VALARM && echo true || echo false)"
+
+A=$(curl -sN --max-time 60 -X POST "$BASE/api/runs/$RID/approve?dryRun=1")
+check "approve ?dryRun=1 ends with status delivered" "$(echo "$A" | judge 'R && R.status === "delivered" && step("APPROVE")?.status === "ok" && step("DELIVER")?.status === "skipped"')"
+
+A2=$(curl -s --max-time 20 -X POST "$BASE/api/runs/$RID/approve?dryRun=1")
+check "second approve is refused (409 envelope, no double send)" "$(echo "$A2" | envelope 'J.success === false && /already/.test(J.error)')"
 
 echo "---"
 echo "$PASS passed, $FAIL failed"
