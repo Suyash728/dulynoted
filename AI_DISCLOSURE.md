@@ -156,3 +156,8 @@ DONE ONLY WHEN
 [ ] redeploy to Vercel and run smoke.sh against the Vercel URL (paste raw output)
 Then list files changed, commit "feat(s1): hero pipeline with live run log and clash detection", and stop. Do not start Slice 2.
 ```
+
+### 12. Vercel auto-deploy [13:12 IST]
+```
+vercel will redeploy automatically on push to main branch (or pr)
+```
