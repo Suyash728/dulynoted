@@ -5,7 +5,7 @@ Paste/upload a college circular → an automatic pipeline extracts actions, dead
 (filled at kickoff)
 
 ## Rules
-- Prompt-only build: append every prompt I give you verbatim to PROMPTS.md ("## <title> [HH:MM IST]" + fenced block) before doing anything else.
+- Prompt-only build: append every prompt I give you verbatim to PROMPTS.md (local, gitignored) AND to the "Prompts used" section of AI_DISCLOSURE.md ("### <n>. <title> [HH:MM IST]" + fenced block) before doing anything else.
 - Plan Mode first for every slice. Use Context7 for any library API you're unsure of.
 - ALL model calls go through lib/llm.ts. Never call Groq/Gemini anywhere else.
 - Every API response is ApiEnvelope<T> = { success, data, error } (lib/types.ts), except NDJSON streams (StreamEvent lines).
