@@ -23,11 +23,14 @@ const NAV = [
 /** Dark hero band: brand, navigation, live status and the page's headline numbers. */
 export function SiteHeader({ status, current, title, subtitle, children }: Props) {
   return (
-    <header className="relative overflow-hidden bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white">
-      <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 h-72 w-72 rounded-full bg-violet-500/30 blur-3xl" />
-      <div aria-hidden className="pointer-events-none absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
+    <header className="relative bg-gradient-to-br from-[#1e1b4b] via-[#312e81] to-[#4338ca] text-white">
+      {/* Decorative glow, clipped in its own layer so popovers in the header are never cut off. */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-24 -top-24 h-72 w-72 rounded-full bg-violet-500/30 blur-3xl" />
+        <div className="absolute -bottom-32 left-1/3 h-72 w-72 rounded-full bg-sky-400/20 blur-3xl" />
+      </div>
       <div className="relative mx-auto max-w-[1400px] px-4 pb-6 pt-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="relative z-50 flex flex-wrap items-center justify-between gap-3">
           <Link href="/" className="flex items-center gap-2.5 rounded-lg" aria-label="DulyNoted home">
             <span aria-hidden className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/15 ring-1 ring-white/25 backdrop-blur">
               <BellRing className="h-5 w-5" />

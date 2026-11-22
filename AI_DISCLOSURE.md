@@ -511,3 +511,26 @@ Before that make sure you fix:
 2. what is that .ics file... i don't think that's easy to access for a normal user
 [screenshot: dashboard] 3. UI still looks super basic.. make it look like a polished web app
 ```
+
+### 21. go P7 [14:32 IST]
+```
+go P7
+```
+Executed prompt P7 (updated playbook), preceded by the agreed pre-demo test-data wipe:
+```
+Append this prompt verbatim to PROMPTS.md under "## P7 Final check [HH:MM IST]".
+Run each check and report PASS/FAIL with the raw evidence:
+1. The Vercel production URL returns 200 (curl -sI).
+2. smoke.sh against production: all PASS. The workshop run's EXTRACT step shows tier gemini (paste that line). If it shows groq or cache, report which Gemini error caused it (429 / timeout / auth) from the step detail.
+3. Playwright MCP in a fresh context (incognito-equivalent): sample → run → approve (dryRun) works; the "Add to Google Calendar" link's href starts with https://calendar.google.com/calendar/render; screenshot to docs/final.png.
+4. Every env var name from .env.example exists in Vercel production, GEMINI_API_KEY included (vercel env ls; names only).
+5. The GitHub repo is public; the latest commit is pushed; PROMPTS.md, AI_DISCLOSURE.md and README.md (with the "Where Google tech is used" table) are on the default branch.
+6. The pg_cron job exists and its last run succeeded (Supabase MCP: cron.job_run_details, latest 3 rows), if built.
+7. Gemini quota: one live run left at least ~10 requests in today's free quota. If a 429 appears, tell me to demo from the sample buttons, which fall back to the cache.
+Fix nothing big. For any FAIL, give me a one-line workaround for the demo. Stop.
+```
+
+### 22. How it works dialog [14:35 IST]
+```
+[screenshot: How it works panel overlapped by status chips and KPI tiles] fix "HOw it works" message diaglog in the UT
+```
