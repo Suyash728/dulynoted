@@ -73,4 +73,5 @@ WON'T: auth, email, WhatsApp, n8n, multi-college, inline editing of extracted fi
 - Groq gpt-oss: json_schema support is flaky per community reports → use json_object + zod + 1 repair
 - Next 14 Data Cache caches GET fetches: the Supabase client in lib/db.ts forces `cache: 'no-store'` — keep it
 - pg_cron job `dulynoted-dispatch` (every minute) reads its bearer from Vault secret `dulynoted_cron_secret`
+- Before the demo / at P7 (user-approved): wipe test data — `delete from reminders; delete from deliveries; delete from run_steps; delete from runs;` (keep audiences + calendar_events), then do 2–3 clean real runs so KPI tiles are genuine
 - Demo uploads in public/samples are rendered for a fixed day: re-run `npm run demo-files` (and reseed calendar) on demo day
