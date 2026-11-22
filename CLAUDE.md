@@ -4,6 +4,14 @@ Paste/upload a college circular → an automatic pipeline extracts actions, dead
 ## Clock (IST)
 (filled at kickoff)
 
+## Evaluation (Hack2Skill AI code review + judges) — every slice must satisfy all 6
+- Code Quality: strict TS, no `any`, small pure functions, one responsibility per file, zod at every boundary, no dead code, lint clean.
+- Security: keys server-only (never NEXT_PUBLIC_ except the Supabase URL), validate + size-limit all input (text ≤ 20k chars, files ≤ 4 MB, MIME allowlist), escape HTML in Telegram, timing-safe CRON_SECRET compare, security headers in next.config, no secrets in logs/errors.
+- Efficiency: one LLM call per step, timeouts + tier fallback, batch DB inserts where possible, no client polling except pending reminders, no server sleeps.
+- Testing: vitest unit tests for every deterministic step (normalize, route, clash, ics, telegram escape, llm JSON repair parsing) + scripts/smoke.sh e2e + Playwright demo. `npm test` must pass before each commit.
+- Accessibility: semantic landmarks, labels on every control, aria-live on the run log, keyboard-operable expand rows, visible focus rings, WCAG AA contrast, status never conveyed by colour alone (icon + text).
+- Problem Statement Alignment: README + UI copy tie every feature to the problem (missed circular deadlines, manual re-typing, timetable clashes).
+
 ## Rules
 - Prompt-only build: append every prompt I give you verbatim to PROMPTS.md (local, gitignored) AND to the "Prompts used" section of AI_DISCLOSURE.md ("### <n>. <title> [HH:MM IST]" + fenced block) before doing anything else.
 - Plan Mode first for every slice. Use Context7 for any library API you're unsure of.
@@ -16,7 +24,7 @@ Paste/upload a college circular → an automatic pipeline extracts actions, dead
 - Seed data, not live typing: every demo path starts from a "Load sample" button.
 
 ## Commands
-npm run dev · npm run build · npm run lint · bash scripts/smoke.sh <BASE_URL>
+npm run dev · npm run build · npm run lint · npm test · bash scripts/smoke.sh <BASE_URL>
 
 ## Stack
 Next.js 14 App Router + TS + Tailwind + shadcn/ui · Supabase Postgres (server-only, service-role key) · Vercel (export const maxDuration = 60 on pipeline routes) · npm: openai zod @supabase/supabase-js ics chrono-node unpdf

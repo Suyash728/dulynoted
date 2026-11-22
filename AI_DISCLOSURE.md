@@ -115,3 +115,11 @@ what should i do now?
 ```
 i've added the bot again and sent the message on group now wht?
 ```
+
+### 10. Evaluation criteria [12:58 IST]
+```
+yes all secrects are added to .env.local
+
+[screenshot: Hack2Skill "AI Code Submission" — evaluated by AI on: Code Quality, Security, Efficiency, Testing, Accessibility, Problem Statement Alignment]
+also make sure you keep this criteria in mind and the code will be equalvaluated by hack2skill ai and judges later
+```
